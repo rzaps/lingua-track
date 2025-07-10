@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+  <h2>Карточный режим</h2>
+
+  {% if message %}
+    <p>{{ message }}</p>
+  {% else %}
+    <div class="card p-3 mb-3">
+      <h3>{{ card.word }}</h3>
+      <p><em>{{ card.translation }}</em></p>
+      {% if card.example %}
+        <p><strong>Пример:</strong> {{ card.example }}</p>
+      {% endif %}
+      {% if card.note %}
+        <p><strong>Примечание:</strong> {{ card.note }}</p>
+      {% endif %}
+      <p><small>Уровень: {{ card.get_level_display }}</small></p>
+    </div>
+
+    <div class="d-flex justify-content-between mb-3">
+      {% if prev_card_id %}
+        <a href="{% url 'words:card_mode' %}?card_id={{ prev_card_id }}" class="btn btn-secondary">← Назад</a>
+      {% else %}
+        <button class="btn btn-secondary" disabled>← Назад</button>
+      {% endif %}
+
+      <span>Карточка {{ current_index }} из {{ total }}</span>
+
+      {% if next_card_id %}
+        <a href="{% url 'words:card_mode' %}?card_id={{ next_card_id }}" class="btn btn-secondary">Вперед →</a>
+      {% else %}
+        <button class="btn btn-secondary" disabled>Вперед →</button>
+      {% endif %}
+    </div>
+  {% endif %}
+
+  <a href="{% url 'words:index' %}" class="btn btn-primary">Список слов</a>
+
+{% endblock %}
