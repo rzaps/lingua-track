@@ -5,6 +5,16 @@
 <div class="card mb-3">
     <div class="card-body">
         <h4 class="card-title">{{ card.word }}</h4>
+        <button class="btn btn-outline-secondary mb-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊 Озвучить</button>
+        <audio id="tts-audio" src="" style="display:none;"></audio>
+        <script>
+          function playTTS(word) {
+            const audio = document.getElementById('tts-audio');
+            audio.src = '/tts/' + word + '/';
+            audio.style.display = 'block';
+            audio.play();
+          }
+        </script>
         <p class="card-text"><strong>Перевод:</strong> {{ card.translation }}</p>
     </div>
 </div>

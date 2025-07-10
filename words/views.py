@@ -1,11 +1,14 @@
 from django.contrib.auth.decorators import login_required
-from django.http import request
+from django.http import request, FileResponse, Http404
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from django.utils.encoding import iri_to_uri
+import os
+from django.conf import settings
 
 from .forms import CardForm
 from .models import Card, Repetition
-from .utils import update_sm2
+from .utils import update_sm2, generate_tts
 
 
 # Главная страница списка карточек
@@ -144,3 +147,15 @@ def user_progress(request):
         'intermediate': intermediate,
         'advanced': advanced,
     })
+
+# Озвучка слова
+def tts_audio(request, word):
+
+    lang = request.GET.get('lang', 'en')
+    rel_path = generate_tts(word, lang)
+    abs_path = os.path.join(settings.MEDIA_ROOT, rel_path)
+    if not os.path.exists(abs_path):
+        raise Http404("Файл не найден")
+    response = FileResponse(open(abs_path, 'rb'), content_type='audio/mpeg')
+    response['Content-Disposition'] = f'inline; filename="{iri_to_uri(os.path.basename(abs_path))}"'
+    return response

@@ -18,4 +18,5 @@ urlpatterns = [
 
     # --- Статистика ---
     path('progress/', views.user_progress, name='user_progress'),  # метрики и т.д.
+    path('tts/<str:word>/', views.tts_audio, name='tts_audio'),  # Озвучка слова
 ]

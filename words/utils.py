@@ -1,4 +1,7 @@
 from django.utils import timezone
+import os
+from gtts import gTTS
+from django.conf import settings
 
 
 # Алгоритм интервального повторения SM-2.
@@ -30,3 +33,18 @@ def update_sm2(repetition, quality):
     repetition.next_review = repetition.last_reviewed + timezone.timedelta(days=repetition.interval)
 
     repetition.save()
+
+
+
+# Генерирует mp3-файл с озвучкой слова и возвращает путь к файлу.
+
+def generate_tts(word, lang='en'):
+   
+    tts_dir = os.path.join(settings.MEDIA_ROOT, 'tts')
+    os.makedirs(tts_dir, exist_ok=True)
+    filename = f"{word}_{lang}.mp3"
+    filepath = os.path.join(tts_dir, filename)
+    if not os.path.exists(filepath):
+        tts = gTTS(text=word, lang=lang)
+        tts.save(filepath)
+    return os.path.join('tts', filename)
