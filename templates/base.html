@@ -12,8 +12,15 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{% url 'words:index' %}">LinguaTrack</a>
-            <div class="collapse navbar-collapse">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarContent">
                 <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'words:index' %}">Мои слова</a>
+                    </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'words:add_card' %}">Добавить</a>
                     </li>
@@ -21,9 +28,13 @@
                         <a class="nav-link" href="{% url 'words:review_today' %}">Повторение</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'words:card_mode' %}">Карточный режим</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'words:user_progress' %}">Прогресс</a>
                     </li>
                 </ul>
+
                 <ul class="navbar-nav ms-auto">
                     {% if user.is_authenticated %}
                         <li class="nav-item">
@@ -43,8 +54,7 @@
     </nav>
 
     <div class="container mt-4">
-        {% block content %}
-        {% endblock %}
+        {% block content %}{% endblock %}
     </div>
 
     <!-- Bootstrap JS -->

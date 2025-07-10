@@ -4,7 +4,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from .forms import CardForm
-from .models import Card
+from .models import Card, Repetition
+from .utils import update_sm2
+
 
 # Главная страница списка карточек
 @login_required
@@ -120,6 +122,13 @@ def review_today(request):
 @login_required
 def review_card(request, pk):
     card = get_object_or_404(Card, pk=pk, user=request.user)
+    repetition, created = Repetition.objects.get_or_create(card=card, user=request.user)
+
+    if request.method == 'POST':
+        quality = int(request.POST.get('quality', 0))
+        update_sm2(repetition, quality)
+        return redirect('words:review_today')
+
     return render(request, 'words/review_card.html', {'card': card})
 
 # Статистика

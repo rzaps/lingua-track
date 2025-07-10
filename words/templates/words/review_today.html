@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Слова для повторения на сегодня</h1>
+
+{% if cards %}
+    <ul class="list-group">
+    {% for card in cards %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+                <strong>{{ card.word }}</strong> — {{ card.translation }}
+            </div>
+            <a href="{% url 'words:review_card' card.pk %}" class="btn btn-primary btn-sm">Повторить</a>
+        </li>
+    {% endfor %}
+    </ul>
+{% else %}
+    <p>Сегодня нет слов для повторения 💤</p>
+{% endif %}
+{% endblock %}
