@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>История тестов</h2>
+
+{# Фильтры #}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Фильтры</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="test_type" class="form-label">Тип теста</label>
+                        <select name="test_type" id="test_type" class="form-select">
+                            <option value="">Все типы</option>
+                            <option value="multiple_choice" {% if current_filters.test_type == 'multiple_choice' %}selected{% endif %}>Множественный выбор</option>
+                            <option value="typing" {% if current_filters.test_type == 'typing' %}selected{% endif %}>Ввод с клавиатуры</option>
+                            <option value="matching" {% if current_filters.test_type == 'matching' %}selected{% endif %}>Сопоставление</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label for="direction" class="form-label">Направление</label>
+                        <select name="direction" id="direction" class="form-select">
+                            <option value="">Все направления</option>
+                            <option value="en-ru" {% if current_filters.direction == 'en-ru' %}selected{% endif %}>Английский → Русский</option>
+                            <option value="ru-en" {% if current_filters.direction == 'ru-en' %}selected{% endif %}>Русский → Английский</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">&nbsp;</label>
+                        <div>
+                            <button type="submit" class="btn btn-primary">Применить</button>
+                            <a href="{% url 'stats:test_history' %}" class="btn btn-secondary">Сбросить</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Общая статистика #}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ total_tests }}</h5>
+                <p class="card-text">Всего тестов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ avg_accuracy }}%</h5>
+                <p class="card-text">Средняя точность</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ test_summary|length }}</h5>
+                <p class="card-text">Типов тестов</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Сводка по типам тестов #}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Сводка по типам тестов</h5>
+            </div>
+            <div class="card-body">
+                {% if test_summary %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Тип теста</th>
+                                    <th>Количество</th>
+                                    <th>Средняя точность</th>
+                                    <th>Лучший результат</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for summary in test_summary %}
+                                <tr>
+                                    <td>
+                                        {% if summary.test_type == 'multiple_choice' %}
+                                            <span class="badge bg-primary">Множественный выбор</span>
+                                        {% elif summary.test_type == 'typing' %}
+                                            <span class="badge bg-success">Ввод с клавиатуры</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Сопоставление</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ summary.count }}</td>
+                                    <td>
+                                        <span class="badge {% if summary.avg_accuracy >= 80 %}bg-success{% elif summary.avg_accuracy >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ summary.avg_accuracy|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                    <td>{{ summary.best_score|floatformat:1 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных для отображения</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# История тестов #}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>История тестов</h5>
+            </div>
+            <div class="card-body">
+                {% if test_results %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Тип</th>
+                                    <th>Направление</th>
+                                    <th>Результат</th>
+                                    <th>Точность</th>
+                                    <th>Оценка</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in test_results %}
+                                <tr>
+                                    <td>{{ test.completed_at|date:"d.m.Y H:i" }}</td>
+                                    <td>
+                                        {% if test.test_type == 'multiple_choice' %}
+                                            <span class="badge bg-primary">Множественный выбор</span>
+                                        {% elif test.test_type == 'typing' %}
+                                            <span class="badge bg-success">Ввод с клавиатуры</span>
+                                        {% else %}
+                                            <span class="badge bg-info">Сопоставление</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if test.direction == 'en-ru' %}
+                                            <span class="badge bg-secondary">EN → RU</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">RU → EN</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ test.score }}/{{ test.total }}</td>
+                                    <td>
+                                        <span class="badge {% if test.accuracy >= 80 %}bg-success{% elif test.accuracy >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ test.accuracy }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if test.result_level == 'Отлично' %}bg-success{% elif test.result_level == 'Хорошо' %}bg-warning{% elif test.result_level == 'Удовлетворительно' %}bg-info{% else %}bg-danger{% endif %}">
+                                            {{ test.result_level }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Пока нет пройденных тестов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Навигация #}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'stats:dashboard' %}" class="btn btn-primary">Назад к статистике</a>
+            <a href="{% url 'stats:charts' %}" class="btn btn-info">Графики</a>
+            <a href="{% url 'stats:recommendations' %}" class="btn btn-success">Рекомендации</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

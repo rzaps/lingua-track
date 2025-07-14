@@ -17,6 +17,7 @@
 
 <a href="{% url 'words:index' %}" class="btn btn-outline-primary">Список слов</a>
 <a href="{% url 'words:card_mode' %}" class="btn btn-primary">Карточный режим</a>
+<a href="{% url 'quiz:choose_test' %}" class="btn btn-success">Тест</a>
 
 
 <a href="{% url 'words:add_card' %}" class="btn btn-primary mb-3">Добавить новое слово</a>
@@ -27,6 +28,7 @@
         <li class="list-group-item d-flex justify-content-between align-items-center">
             <div>
                 <strong>{{ card.word }}</strong> — {{ card.translation }} ({{ card.get_level_display }})
+                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊</button>
             </div>
             <div>
                 <a href="{% url 'words:card_detail' card.pk %}" class="btn btn-sm btn-info">Просмотр</a>
@@ -36,6 +38,15 @@
         </li>
     {% endfor %}
     </ul>
+    <audio id="tts-audio" src="" style="display:none;"></audio>
+    <script>
+      function playTTS(word) {
+        const audio = document.getElementById('tts-audio');
+        audio.src = '/tts/' + word + '/';
+        audio.style.display = 'block';
+        audio.play();
+      }
+    </script>
 {% else %}
     <p>Пока нет добавленных слов.</p>
 {% endif %}

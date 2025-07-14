@@ -118,7 +118,9 @@ def card_mode(request):
 @login_required
 def review_today(request):
     today = timezone.now().date()
-    cards = Card.objects.filter(user=request.user).order_by('-created_at')
+    # Выбираем только карточки, у которых есть повторение на сегодня или раньше
+    repetitions = Repetition.objects.filter(user=request.user, next_review__lte=today)
+    cards = [rep.card for rep in repetitions]
     return render(request, 'words/review_today.html', {'cards': cards})
 
 # Повторение конкретного слова (карточки)
@@ -133,20 +135,6 @@ def review_card(request, pk):
         return redirect('words:review_today')
 
     return render(request, 'words/review_card.html', {'card': card})
-
-# Статистика
-@login_required
-def user_progress(request):
-    total = Card.objects.filter(user=request.user).count()
-    beginner = Card.objects.filter(user=request.user, level='beginner').count()
-    intermediate = Card.objects.filter(user=request.user, level='intermediate').count()
-    advanced = Card.objects.filter(user=request.user, level='advanced').count()
-    return render(request, 'words/progress.html', {
-        'total': total,
-        'beginner': beginner,
-        'intermediate': intermediate,
-        'advanced': advanced,
-    })
 
 # Озвучка слова
 def tts_audio(request, word):

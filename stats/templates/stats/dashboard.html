@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Статистика обучения</h2>
+
+{# Основные метрики #}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.total_cards }}</h5>
+                <p class="card-text">Всего слов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.total_reviews }}</h5>
+                <p class="card-text">Повторений</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.total_tests }}</h5>
+                <p class="card-text">Тестов пройдено</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ due_cards }}</h5>
+                <p class="card-text">Слов на повторение</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Прогресс по уровням #}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-chart-line text-primary"></i> Прогресс по уровням</h5>
+            </div>
+            <div class="card-body">
+                {% if user_stats.total_cards > 0 %}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Начальный</span>
+                            <span>{{ user_stats.beginner_cards }} ({{ user_stats.beginner_cards|floatformat:1 }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" 
+                                 style="width: {% widthratio user_stats.beginner_cards user_stats.total_cards 100 %}%" 
+                                 aria-valuenow="{{ user_stats.beginner_cards }}" aria-valuemin="0" aria-valuemax="{{ user_stats.total_cards }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Средний</span>
+                            <span>{{ user_stats.intermediate_cards }} ({{ user_stats.intermediate_cards|floatformat:1 }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" 
+                                 style="width: {% widthratio user_stats.intermediate_cards user_stats.total_cards 100 %}%" 
+                                 aria-valuenow="{{ user_stats.intermediate_cards }}" aria-valuemin="0" aria-valuemax="{{ user_stats.total_cards }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span>Продвинутый</span>
+                            <span>{{ user_stats.advanced_cards }} ({{ user_stats.advanced_cards|floatformat:1 }}%)</span>
+                        </div>
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" 
+                                 style="width: {% widthratio user_stats.advanced_cards user_stats.total_cards 100 %}%" 
+                                 aria-valuenow="{{ user_stats.advanced_cards }}" aria-valuemin="0" aria-valuemax="{{ user_stats.total_cards }}">
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i>
+                        У вас пока нет слов. <a href="{% url 'words:add_card' %}" class="alert-link">Добавьте первое слово</a>!
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Успешность</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Повторения:</span>
+                    <span class="badge bg-info">{{ user_stats.review_success_rate }}%</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Тесты:</span>
+                    <span class="badge bg-primary">{{ user_stats.tests_accuracy|floatformat:1 }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Последние тесты #}
+<div class="row mb-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5>Последние тесты</h5>
+            </div>
+            <div class="card-body">
+                {% if recent_tests %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Тип</th>
+                                    <th>Направление</th>
+                                    <th>Результат</th>
+                                    <th>Дата</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for test in recent_tests %}
+                                <tr>
+                                    <td>{{ test.get_test_type_display }}</td>
+                                    <td>{{ test.direction }}</td>
+                                    <td>
+                                        <span class="badge {% if test.accuracy >= 80 %}bg-success{% elif test.accuracy >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ test.score }}/{{ test.total }} ({{ test.accuracy }}%)
+                                        </span>
+                                    </td>
+                                    <td>{{ test.completed_at|date:"d.m.Y H:i" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Пока нет пройденных тестов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Рекомендации</h5>
+            </div>
+            <div class="card-body">
+                {% if recommendations %}
+                    <ul class="list-unstyled">
+                        {% for rec in recommendations %}
+                        <li class="mb-2">
+                            <i class="bi bi-lightbulb text-warning"></i>
+                            {{ rec }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    <a href="{% url 'stats:recommendations' %}" class="btn btn-sm btn-outline-primary">Все рекомендации</a>
+                {% else %}
+                    <p class="text-muted">Отличная работа! Продолжайте в том же духе.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Навигация по статистике #}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'stats:charts' %}" class="btn btn-primary">Графики</a>
+            <a href="{% url 'stats:recommendations' %}" class="btn btn-success">Рекомендации</a>
+            <a href="{% url 'stats:test_history' %}" class="btn btn-info">История тестов</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

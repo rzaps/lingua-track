@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Тест: выберите правильный ответ</h2>
+<p>Вопрос {{ question_number }} из {{ total }}</p>
+<p>
+  {% if direction == 'en-ru' %}
+    <strong>Слово:</strong> {{ question }}
+  {% else %}
+    <strong>Перевод:</strong> {{ question }}
+  {% endif %}
+</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="list-group mb-3">
+    {# Перебираем варианты ответа #}
+    {% for option in options %}
+      <button type="submit" name="answer" value="{{ option }}" class="list-group-item list-group-item-action">{{ option }}</button>
+    {% endfor %}
+  </div>
+</form>
+<p>Правильных ответов: {{ score }}</p>
+<a href="{% url 'quiz:choose_test' %}" class="btn btn-link">Сменить настройки</a>
+{% endblock %} 

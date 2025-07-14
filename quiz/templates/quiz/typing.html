@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Тест: введите правильный ответ</h2>
+<p>Вопрос {{ question_number }} из {{ total }}</p>
+<p>
+  {% if direction == 'en-ru' %}
+    <strong>Слово:</strong> {{ question }}
+  {% else %}
+    <strong>Перевод:</strong> {{ question }}
+  {% endif %}
+</p>
+<form method="post">
+  {% csrf_token %}
+  <div class="mb-3">
+    <label for="answer" class="form-label">
+      {% if direction == 'en-ru' %}
+        Введите перевод:
+      {% else %}
+        Введите слово:
+      {% endif %}
+    </label>
+    <input type="text" class="form-control" id="answer" name="answer" required autofocus>
+  </div>
+  <button type="submit" class="btn btn-primary">Ответить</button>
+</form>
+<p>Правильных ответов: {{ score }}</p>
+<a href="{% url 'quiz:choose_test' %}" class="btn btn-link">Сменить настройки</a>
+{% endblock %} 

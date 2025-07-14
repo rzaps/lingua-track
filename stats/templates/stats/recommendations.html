@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Персональные рекомендации</h2>
+
+{# Общая статистика #}
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.total_cards }}</h5>
+                <p class="card-text">Всего слов</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.review_success_rate }}%</h5>
+                <p class="card-text">Успешность повторений</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-center">
+            <div class="card-body">
+                <h5 class="card-title">{{ user_stats.tests_accuracy|floatformat:1 }}%</h5>
+                <p class="card-text">Точность тестов</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Рекомендации по категориям #}
+<div class="row mb-4">
+    {# Рекомендации по карточкам #}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>📚 Слова и карточки</h5>
+            </div>
+            <div class="card-body">
+                {% if card_recommendations %}
+                    <ul class="list-unstyled">
+                        {% for rec in card_recommendations %}
+                        <li class="mb-2">
+                            <i class="bi bi-lightbulb text-warning"></i>
+                            {{ rec }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">Отличная работа с карточками!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {# Рекомендации по повторениям #}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>🔄 Повторения</h5>
+            </div>
+            <div class="card-body">
+                {% if review_recommendations %}
+                    <ul class="list-unstyled">
+                        {% for rec in review_recommendations %}
+                        <li class="mb-2">
+                            <i class="bi bi-lightbulb text-warning"></i>
+                            {{ rec }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">Отличная работа с повторениями!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {# Рекомендации по тестам #}
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>📝 Тесты</h5>
+            </div>
+            <div class="card-body">
+                {% if test_recommendations %}
+                    <ul class="list-unstyled">
+                        {% for rec in test_recommendations %}
+                        <li class="mb-2">
+                            <i class="bi bi-lightbulb text-warning"></i>
+                            {{ rec }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-success">Отличная работа с тестами!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Слова, требующие внимания #}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>⚠️ Слова, требующие внимания</h5>
+            </div>
+            <div class="card-body">
+                {% if weak_cards %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Слово</th>
+                                    <th>Перевод</th>
+                                    <th>Уровень</th>
+                                    <th>Успешность</th>
+                                    <th>Действие</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for repetition in weak_cards %}
+                                <tr>
+                                    <td>{{ repetition.card.word }}</td>
+                                    <td>{{ repetition.card.translation }}</td>
+                                    <td>
+                                        <span class="badge {% if repetition.card.level == 'beginner' %}bg-success{% elif repetition.card.level == 'intermediate' %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ repetition.card.get_level_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge {% if repetition.success_rate >= 70 %}bg-success{% elif repetition.success_rate >= 50 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ repetition.success_rate }}%
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'words:review_card' repetition.card.pk %}" class="btn btn-sm btn-primary">Повторить</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-success">Все слова хорошо усваиваются!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Все рекомендации #}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>📋 Все рекомендации</h5>
+            </div>
+            <div class="card-body">
+                {% if all_recommendations %}
+                    <div class="row">
+                        {% for rec in all_recommendations %}
+                        <div class="col-md-6 mb-2">
+                            <div class="alert alert-info">
+                                <i class="bi bi-lightbulb text-warning"></i>
+                                {{ rec }}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-success">
+                        <i class="bi bi-check-circle"></i>
+                        Отличная работа! Продолжайте в том же духе.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Навигация #}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'stats:dashboard' %}" class="btn btn-primary">Назад к статистике</a>
+            <a href="{% url 'stats:charts' %}" class="btn btn-info">Графики</a>
+            <a href="{% url 'stats:test_history' %}" class="btn btn-success">История тестов</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

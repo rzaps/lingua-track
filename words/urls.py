@@ -16,7 +16,6 @@ urlpatterns = [
     path('review/', views.review_today, name='review_today'),  # слова на повторение
     path('review/<int:pk>/', views.review_card, name='review_card'),  # конкретное слово
 
-    # --- Статистика ---
-    path('progress/', views.user_progress, name='user_progress'),  # метрики и т.д.
+    # --- Озвучка ---
     path('tts/<str:word>/', views.tts_audio, name='tts_audio'),  # Озвучка слова
 ]

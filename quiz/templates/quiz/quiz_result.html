@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Тест завершён!</h2>
+<p>Ваш результат: <strong>{{ score }}</strong> из <strong>{{ total }}</strong></p>
+<a href="{% url 'quiz:multiple_choice' %}" class="btn btn-primary">Пройти ещё раз</a>
+<a href="{% url 'words:index' %}" class="btn btn-secondary">К списку слов</a>
+{% endblock %} 

@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Графики и диаграммы</h2>
+
+{# Статистика по уровням карточек #}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Слова по уровням</h5>
+            </div>
+            <div class="card-body">
+                {% if level_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Уровень</th>
+                                    <th>Количество</th>
+                                    <th>Процент</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in level_stats %}
+                                <tr>
+                                    <td>
+                                        {% if stat.level == 'beginner' %}
+                                            <span class="badge bg-success">Начальный</span>
+                                        {% elif stat.level == 'intermediate' %}
+                                            <span class="badge bg-warning">Средний</span>
+                                        {% else %}
+                                            <span class="badge bg-danger">Продвинутый</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ stat.count }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 style="width: {{ stat.count|floatformat:0 }}%">
+                                                {{ stat.count|floatformat:0 }}%
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных для отображения</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    {# Статистика тестов по типам #}
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Тесты по типам</h5>
+            </div>
+            <div class="card-body">
+                {% if test_type_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Тип теста</th>
+                                    <th>Количество</th>
+                                    <th>Средняя точность</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in test_type_stats %}
+                                <tr>
+                                    <td>{{ stat.test_type|title }}</td>
+                                    <td>{{ stat.count }}</td>
+                                    <td>
+                                        <span class="badge {% if stat.avg_accuracy >= 80 %}bg-success{% elif stat.avg_accuracy >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ stat.avg_accuracy|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Пока нет пройденных тестов</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Статистика по дням #}
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Тесты по дням (последние 30 дней)</h5>
+            </div>
+            <div class="card-body">
+                {% if daily_test_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Тестов</th>
+                                    <th>Средняя точность</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in daily_test_stats %}
+                                <tr>
+                                    <td>{{ stat.completed_at__date|date:"d.m.Y" }}</td>
+                                    <td>{{ stat.count }}</td>
+                                    <td>
+                                        <span class="badge {% if stat.avg_accuracy >= 80 %}bg-success{% elif stat.avg_accuracy >= 60 %}bg-warning{% else %}bg-danger{% endif %}">
+                                            {{ stat.avg_accuracy|floatformat:1 }}%
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных о тестах за последние 30 дней</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Повторения по дням (последние 30 дней)</h5>
+            </div>
+            <div class="card-body">
+                {% if daily_review_stats %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Дата</th>
+                                    <th>Повторений</th>
+                                    <th>Успешных</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for stat in daily_review_stats %}
+                                <tr>
+                                    <td>{{ stat.last_reviewed|date:"d.m.Y" }}</td>
+                                    <td>{{ stat.total_reviews }}</td>
+                                    <td>
+                                        <span class="badge bg-success">{{ stat.successful_reviews }}</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted">Нет данных о повторениях за последние 30 дней</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Навигация #}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex gap-2">
+            <a href="{% url 'stats:dashboard' %}" class="btn btn-primary">Назад к статистике</a>
+            <a href="{% url 'stats:recommendations' %}" class="btn btn-success">Рекомендации</a>
+            <a href="{% url 'stats:test_history' %}" class="btn btn-info">История тестов</a>
+        </div>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="alert alert-warning mt-4">
+  Для теста нужно минимум 2 карточки. Пожалуйста, добавьте ещё слова!
+</div>
+<a href="{% url 'words:add_card' %}" class="btn btn-primary">Добавить слово</a>
+<a href="{% url 'words:index' %}" class="btn btn-secondary">К списку слов</a>
+{% endblock %} 

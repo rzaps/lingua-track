@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Просмотр карточки</h2>
+<div class="card mb-3">
+  <div class="card-body">
+    <h4 class="card-title">{{ card.word }}</h4>
+    <p class="card-text"><strong>Перевод:</strong> {{ card.translation }}</p>
+    {% if card.example %}
+      <p class="card-text"><strong>Пример:</strong> {{ card.example }}</p>
+    {% endif %}
+    {% if card.note %}
+      <p class="card-text"><strong>Примечание:</strong> {{ card.note }}</p>
+    {% endif %}
+    <p class="card-text"><strong>Уровень:</strong> {{ card.get_level_display }}</p>
+    <button class="btn btn-outline-secondary mb-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊 Озвучить</button>
+    <audio id="tts-audio" src="" style="display:none;"></audio>
+    <script>
+      function playTTS(word) {
+        const audio = document.getElementById('tts-audio');
+        audio.src = '/tts/' + word + '/';
+        audio.style.display = 'block';
+        audio.play();
+      }
+    </script>
+  </div>
+</div>
+<a href="{% url 'words:index' %}" class="btn btn-primary">Назад к списку</a>
+<a href="{% url 'words:edit_card' card.pk %}" class="btn btn-warning">Редактировать</a>
+<a href="{% url 'words:delete_card' card.pk %}" class="btn btn-danger">Удалить</a>
+{% endblock %} 

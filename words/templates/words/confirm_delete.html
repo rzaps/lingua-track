@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Удалить карточку</h2>
+<div class="alert alert-danger">
+  <p>Вы уверены, что хотите удалить карточку <strong>{{ card.word }}</strong>?</p>
+</div>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-danger">Удалить</button>
+  <a href="{% url 'words:index' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %} 

@@ -10,6 +10,10 @@ from django.conf import settings
 
 
 def update_sm2(repetition, quality):
+    # Обновляем статистику повторения
+    repetition.update_stats(quality)
+    
+    # Алгоритм интервального повторения SM-2
     if quality < 3:
         repetition.interval = 1
         repetition.repetition_count = 0

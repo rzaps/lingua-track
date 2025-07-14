@@ -1,0 +1,122 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">🔗 Связь с Telegram</h4>
+                </div>
+                <div class="card-body">
+                    
+                    {% if telegram_info.is_telegram_user %}
+                        <!-- Аккаунт уже связан -->
+                        <div class="alert alert-success">
+                            <h5>✅ Аккаунт связан с Telegram</h5>
+                            <p class="mb-0">
+                                Ваш аккаунт <strong>{{ user.username }}</strong> связан с Telegram.
+                            </p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Информация о связи:</h6>
+                                <ul class="list-unstyled">
+                                    <li><strong>Telegram ID:</strong> {{ telegram_info.telegram_id }}</li>
+                                    {% if telegram_info.telegram_username %}
+                                        <li><strong>Telegram Username:</strong> @{{ telegram_info.telegram_username }}</li>
+                                    {% endif %}
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Что это даёт:</h6>
+                                <ul class="list-unstyled">
+                                    <li>✅ Синхронизация карточек</li>
+                                    <li>✅ Общая статистика</li>
+                                    <li>✅ Напоминания в Telegram</li>
+                                    <li>✅ Тесты в боте</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <a href="https://t.me/your_bot_username" class="btn btn-primary" target="_blank">
+                                🔗 Открыть бота в Telegram
+                            </a>
+                        </div>
+                        
+                    {% else %}
+                        <!-- Аккаунт не связан -->
+                        <div class="alert alert-info">
+                            <h5>🔗 Свяжите аккаунт с Telegram</h5>
+                            <p class="mb-0">
+                                Свяжите ваш аккаунт с Telegram ботом для синхронизации данных и получения уведомлений.
+                            </p>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Как получить Telegram ID:</h6>
+                                <ol>
+                                    <li>Найдите бота @userinfobot в Telegram</li>
+                                    <li>Отправьте ему любое сообщение</li>
+                                    <li>Скопируйте ваш ID из ответа</li>
+                                </ol>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Преимущества связи:</h6>
+                                <ul>
+                                    <li>📱 Уведомления о повторениях</li>
+                                    <li>🔄 Синхронизация прогресса</li>
+                                    <li>📝 Тесты в Telegram</li>
+                                    <li>🔊 Озвучка слов</li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <form method="post" class="mt-4">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="link">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="telegram_id" class="form-label">Telegram ID *</label>
+                                        <input type="number" class="form-control" id="telegram_id" 
+                                               name="telegram_id" required 
+                                               placeholder="123456789">
+                                        <div class="form-text">Ваш уникальный ID в Telegram</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="telegram_username" class="form-label">Telegram Username</label>
+                                        <input type="text" class="form-control" id="telegram_username" 
+                                               name="telegram_username" 
+                                               placeholder="username">
+                                        <div class="form-text">Ваш username в Telegram (без @)</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success">
+                                    🔗 Связать аккаунт
+                                </button>
+                            </div>
+                        </form>
+                        
+                        <div class="mt-3 text-center">
+                            <small class="text-muted">
+                                После связывания вы сможете использовать команду /link в боте для проверки статуса
+                            </small>
+                        </div>
+                    {% endif %}
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

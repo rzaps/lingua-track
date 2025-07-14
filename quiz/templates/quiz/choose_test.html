@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block content %}
+<h2>Выберите тип теста и направление</h2>
+<form method="post">
+  {% csrf_token %}
+  
+  {# Выбор типа теста #}
+  <div class="mb-4">
+    <h4>Тип теста:</h4>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="test_type" id="multiple_choice" value="multiple_choice" checked>
+      <label class="form-check-label" for="multiple_choice">
+        <strong>Множественный выбор</strong> — выберите правильный ответ из 4 вариантов
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="test_type" id="typing" value="typing">
+      <label class="form-check-label" for="typing">
+        <strong>Ввод с клавиатуры</strong> — введите правильный ответ
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="test_type" id="matching" value="matching">
+      <label class="form-check-label" for="matching">
+        <strong>Сопоставление</strong> — соедините слова с переводами
+      </label>
+    </div>
+  </div>
+
+  {# Выбор направления #}
+  <div class="mb-4">
+    <h4>Направление:</h4>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="direction" id="enru" value="en-ru" checked>
+      <label class="form-check-label" for="enru">
+        <strong>Английский → Русский</strong> — переводите с английского на русский
+      </label>
+    </div>
+    <div class="form-check">
+      <input class="form-check-input" type="radio" name="direction" id="ruen" value="ru-en">
+      <label class="form-check-label" for="ruen">
+        <strong>Русский → Английский</strong> — переводите с русского на английский
+      </label>
+    </div>
+  </div>
+
+  <button type="submit" class="btn btn-primary btn-lg">Начать тест</button>
+</form>
+{% endblock %} 
