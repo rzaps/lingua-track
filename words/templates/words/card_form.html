@@ -1,10 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Редактировать карточку</h2>
+<h2 class="fw-bold mb-4">Редактировать карточку</h2>
 <form method="post">
   {% csrf_token %}
   {{ form.as_p }}
-  <button type="submit" class="btn btn-success">Сохранить</button>
-  <a href="{% url 'words:index' %}" class="btn btn-secondary">Отмена</a>
+  <div class="d-flex gap-2 mt-3">
+    <button type="submit" class="btn btn-icon btn-success" title="Сохранить">
+      <i class="bi bi-check-lg"></i>
+    </button>
+    <a href="{% url 'words:index' %}" class="btn btn-icon btn-secondary" title="Отмена">
+      <i class="bi bi-x-lg"></i>
+    </a>
+  </div>
 </form>
 {% endblock %} 

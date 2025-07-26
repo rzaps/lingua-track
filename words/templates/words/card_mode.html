@@ -1,14 +1,41 @@
 {% extends "base.html" %}
-{% block content %}
-  <h2>Карточный режим</h2>
+{% load static %}
 
-  {% if message %}
-    <p>{{ message }}</p>
-  {% else %}
-    <div class="card p-3 mb-3">
-      <h3>{{ card.word }}</h3>
-      <p><em>{{ card.translation }}</em></p>
-      <button class="btn btn-outline-secondary mb-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊 Озвучить</button>
+{% block content %}
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <h1 class="fw-bold mb-0">Карточный режим</h1>
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'words:add_card' %}" class="btn btn-success d-flex align-items-center px-3 py-2" title="Добавить слово">
+      <i class="bi bi-plus-lg me-1"></i> <span class="d-none d-md-inline">Добавить</span>
+    </a>
+    <div class="toggle-switch">
+      <a href="{% url 'words:index' %}" class="btn btn-outline-primary {% if request.resolver_match.url_name == 'index' %}active{% endif %} d-flex align-items-center px-3 py-2" title="Список слов">
+        <i class="bi bi-list-ul"></i>
+      </a>
+      <a href="{% url 'words:card_mode' %}" class="btn btn-outline-primary {% if request.resolver_match.url_name == 'card_mode' %}active{% endif %} d-flex align-items-center px-3 py-2" title="Карточный режим">
+        <i class="bi bi-collection-play"></i>
+      </a>
+    </div>
+  </div>
+</div>
+
+{% if message %}
+  <p>{{ message }}</p>
+{% else %}
+  <div class="card p-3 mb-3 d-flex flex-row align-items-center card-word-row">
+    <!-- Цветная полоска уровня -->
+    <div class="level-bar me-3 {{ card.level }}"></div>
+    <div class="flex-grow-1">
+      <h3 class="mb-1">{{ card.word }}</h3>
+      <p class="mb-2"><em>{{ card.translation }}</em></p>
+      <!-- Кнопка повторения с AJAX -->
+      <button class="btn btn-icon btn-repeat mb-2 {% if in_repetition %}in-rep{% endif %}" data-card-id="{{ card.id }}" title="Повторить">
+        <i class="bi bi-arrow-repeat"></i>
+      </button>
+      <!-- Кнопка озвучивания только иконка -->
+      <button class="btn btn-icon mb-2" onclick="playTTS('{{ card.word|urlencode }}')" title="Озвучить">
+        <i class="bi bi-volume-up"></i>
+      </button>
       <audio id="tts-audio" src="" style="display:none;"></audio>
       <script>
         function playTTS(word) {
@@ -19,31 +46,60 @@
         }
       </script>
       {% if card.example %}
-        <p><strong>Пример:</strong> {{ card.example }}</p>
+        <p class="mb-1"><strong>Пример:</strong> {{ card.example }}</p>
       {% endif %}
       {% if card.note %}
-        <p><strong>Примечание:</strong> {{ card.note }}</p>
-      {% endif %}
-      <p><small>Уровень: {{ card.get_level_display }}</small></p>
-    </div>
-
-    <div class="d-flex justify-content-between mb-3">
-      {% if prev_card_id %}
-        <a href="{% url 'words:card_mode' %}?card_id={{ prev_card_id }}" class="btn btn-secondary">← Назад</a>
-      {% else %}
-        <button class="btn btn-secondary" disabled>← Назад</button>
-      {% endif %}
-
-      <span>Карточка {{ current_index }} из {{ total }}</span>
-
-      {% if next_card_id %}
-        <a href="{% url 'words:card_mode' %}?card_id={{ next_card_id }}" class="btn btn-secondary">Вперед →</a>
-      {% else %}
-        <button class="btn btn-secondary" disabled>Вперед →</button>
+        <p class="mb-1"><strong>Примечание:</strong> {{ card.note }}</p>
       {% endif %}
     </div>
-  {% endif %}
+  </div>
 
-  <a href="{% url 'words:index' %}" class="btn btn-primary">Список слов</a>
+  <div class="d-flex justify-content-between mb-3">
+    {% if prev_card_id %}
+      <a href="{% url 'words:card_mode' %}?card_id={{ prev_card_id }}" class="btn btn-icon btn-outline-primary" title="Назад">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+    {% else %}
+      <button class="btn btn-icon btn-outline-primary" disabled title="Назад">
+        <i class="bi bi-arrow-left"></i>
+      </button>
+    {% endif %}
 
+    <span>Карточка {{ current_index }} из {{ total }}</span>
+
+    {% if next_card_id %}
+      <a href="{% url 'words:card_mode' %}?card_id={{ next_card_id }}" class="btn btn-icon btn-outline-primary" title="Вперёд">
+        <i class="bi bi-arrow-right"></i>
+      </a>
+    {% else %}
+      <button class="btn btn-icon btn-outline-primary" disabled title="Вперёд">
+        <i class="bi bi-arrow-right"></i>
+      </button>
+    {% endif %}
+  </div>
+{% endif %}
 {% endblock %}
+
+<script>
+  // --- AJAX для кнопки повторения ---
+  document.querySelectorAll('.btn-repeat').forEach(btn => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (btn.classList.contains('in-rep')) return; // Уже в повторении
+      fetch('{% url "words:add_to_repetition" %}', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'X-CSRFToken': '{{ csrf_token }}',
+        },
+        body: 'card_id=' + btn.dataset.cardId
+      })
+      .then(r => r.json())
+      .then(data => {
+        if (data.success && data.in_repetition) {
+          btn.classList.add('in-rep');
+        }
+      });
+    });
+  });
+</script>

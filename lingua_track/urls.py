@@ -24,7 +24,7 @@ from django.urls import path, include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('words.urls', namespace='words')),
-    path('accounts/', include('django.contrib.auth.urls')),
+    # path('accounts/', include('django.contrib.auth.urls')),  # Отключено, чтобы использовать только свои шаблоны
     path('quiz/', include('quiz.urls', namespace='quiz')),
     path('stats/', include('stats.urls', namespace='stats')),
     path('users/', include('users.urls', namespace='users')),

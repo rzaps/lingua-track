@@ -38,21 +38,6 @@
         <label for="id_password2" class="form-label">Подтверждение пароля *</label>
         <input type="password" name="password2" required class="form-control" id="id_password2">
       </div>
-      <div class="card mb-3 border-0 bg-light-subtle">
-        <div class="card-header bg-transparent border-0 pb-0">
-          <h6 class="mb-0"><span style="color: var(--accent-secondary);">🔗</span> Интеграция с Telegram <span class="text-muted small">(необязательно)</span></h6>
-        </div>
-        <div class="card-body pt-2">
-          <div class="mb-3">
-            <label for="id_telegram_id" class="form-label">Telegram ID</label>
-            <input type="number" name="telegram_id" class="form-control" id="id_telegram_id" value="{{ form.telegram_id.value|default:'' }}" placeholder="123456789">
-          </div>
-          <div class="mb-3">
-            <label for="id_telegram_username" class="form-label">Telegram Username</label>
-            <input type="text" name="telegram_username" class="form-control" id="id_telegram_username" value="{{ form.telegram_username.value|default:'' }}" placeholder="username">
-          </div>
-        </div>
-      </div>
       <div class="d-grid mb-2">
         <button type="submit" class="btn btn-success btn-lg">Зарегистрироваться</button>
       </div>
@@ -60,6 +45,12 @@
     <div class="mt-3 text-center">
       <span class="text-muted">Уже есть аккаунт?</span>
       <a href="{% url 'users:login' %}" class="">Войти</a>
+    </div>
+    <div class="mt-3 text-center">
+      <p class="text-muted mb-0">🤖 Хотите синхронизировать с Telegram?</p>
+      <a href="https://t.me/your_bot_username" target="_blank" class="btn btn-sm btn-outline-primary mt-2">
+        <i class="bi bi-telegram"></i> Открыть бота
+      </a>
     </div>
   </div>
 </div>

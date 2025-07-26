@@ -1,20 +1,43 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Слова для повторения на сегодня</h1>
+<h1 class="fw-bold mb-4">Слова для повторения на сегодня</h1>
 
 {% if cards %}
     <ul class="list-group">
     {% for card in cards %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <strong>{{ card.word }}</strong> — {{ card.translation }} ({{ card.get_level_display }})
+        <li class="list-group-item d-flex justify-content-between align-items-center word-row">
+            <!-- Цветная полоска уровня -->
+            <div class="level-bar me-3 {{ card.level }}"></div>
+            <div class="flex-grow-1 d-flex align-items-center gap-2">
+                <strong>{{ card.word }}</strong> — {{ card.translation }}
+                <!-- Кнопка озвучивания только иконка -->
+                <button class="btn btn-icon ms-2" onclick="playTTS('{{ card.word|urlencode }}')" title="Озвучить">
+                  <i class="bi bi-volume-up"></i>
+                </button>
             </div>
-            <div>
-                <a href="{% url 'words:review_card' card.pk %}" class="btn btn-sm btn-primary">Повторить</a>
+            <div class="d-flex gap-1">
+                <!-- Кнопка Повторить -->
+                <a href="{% url 'words:review_card' card.pk %}" class="btn btn-icon btn-outline-primary" title="Повторить">
+                  <i class="bi bi-arrow-repeat"></i>
+                </a>
+                <!-- Кнопка Просмотр -->
+                <a href="{% url 'words:card_detail' card.pk %}" class="btn btn-icon btn-info" title="Просмотр">
+                  <i class="bi bi-eye"></i>
+                </a>
             </div>
         </li>
     {% endfor %}
     </ul>
+    <audio id="tts-audio" src="" style="display:none;"></audio>
+    <script>
+      function playTTS(word) {
+        const audio = document.getElementById('tts-audio');
+        audio.src = '/tts/' + word + '/';
+        audio.style.display = 'block';
+        audio.play();
+      }
+    </script>
 {% else %}
     <div class="alert alert-success mt-3">На сегодня нет слов для повторения!</div>
 {% endif %}

@@ -4,6 +4,7 @@ from django.contrib.auth import login
 from django.contrib import messages
 from .forms import UserRegistrationForm
 from .models import UserProfile
+from telegram_bot.config import Config
 
 def register(request):
     """View для регистрации новых пользователей"""
@@ -31,48 +32,19 @@ def telegram_link(request):
             'is_telegram_user': request.user.profile.is_telegram_user
         }
     except UserProfile.DoesNotExist:
+        # Создаем пустой профиль, если его нет
+        profile = UserProfile.objects.create(user=request.user)
         telegram_info = {
             'telegram_id': None,
             'telegram_username': None,
             'is_telegram_user': False
         }
     
-    if request.method == 'POST':
-        action = request.POST.get('action')
-        
-        if action == 'link':
-            # Логика связывания (в будущем можно добавить верификацию)
-            telegram_id = request.POST.get('telegram_id')
-            telegram_username = request.POST.get('telegram_username')
-            
-            if telegram_id:
-                try:
-                    # Создаём или обновляем профиль
-                    profile, created = UserProfile.objects.get_or_create(
-                        user=request.user,
-                        defaults={
-                            'telegram_id': int(telegram_id),
-                            'telegram_username': telegram_username,
-                            'is_telegram_user': True
-                        }
-                    )
-                    
-                    if not created:
-                        # Обновляем существующий профиль
-                        profile.telegram_id = int(telegram_id)
-                        profile.telegram_username = telegram_username
-                        profile.is_telegram_user = True
-                        profile.save()
-                    
-                    messages.success(request, 'Аккаунт успешно связан с Telegram!')
-                except ValueError as e:
-                    messages.error(request, f'Ошибка: {str(e)}')
-                except Exception as e:
-                    messages.error(request, 'Произошла ошибка при связывании аккаунта')
-    
     context = {
         'telegram_info': telegram_info,
-        'user': request.user
+        'user': request.user,
+        'bot_url': Config.get_bot_url(),
+        'qr_url': Config.get_qr_url(),
     }
     
     return render(request, 'users/telegram_link.html', context)

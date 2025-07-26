@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Тест: введите правильный ответ</h2>
-<p>Вопрос {{ question_number }} из {{ total }}</p>
+<h2 class="fw-bold mb-3">Тест: введите правильный ответ</h2>
+<p class="mb-2">Вопрос <strong>{{ question_number }}</strong> из <strong>{{ total }}</strong></p>
 <p>
   {% if direction == 'en-ru' %}
     <strong>Слово:</strong> {{ question }}
@@ -19,10 +20,14 @@
         Введите слово:
       {% endif %}
     </label>
-    <input type="text" class="form-control" id="answer" name="answer" required autofocus>
+    <input type="text" class="form-control form-control-lg" id="answer" name="answer" required autofocus>
   </div>
-  <button type="submit" class="btn btn-primary">Ответить</button>
+  <button type="submit" class="btn btn-success d-flex align-items-center gap-2 px-4">
+    <i class="bi bi-arrow-right-circle"></i> <span>Ответить</span>
+  </button>
 </form>
-<p>Правильных ответов: {{ score }}</p>
-<a href="{% url 'quiz:choose_test' %}" class="btn btn-link">Сменить настройки</a>
+<p class="mb-3">Правильных ответов: <strong>{{ score }}</strong></p>
+<a href="{% url 'quiz:choose_test' %}" class="btn btn-icon btn-outline-primary" title="Сменить настройки">
+  <i class="bi bi-gear"></i>
+</a>
 {% endblock %} 

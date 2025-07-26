@@ -1,6 +1,16 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Графики и диаграммы</h2>
+{# --- СТАРТ: заменяю заголовок и кнопки на единый flex-блок --- #}
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <h2 class="mb-0">Графики и диаграммы</h2>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'stats:dashboard' %}" class="btn btn-primary">Назад к статистике</a>
+        <a href="{% url 'stats:recommendations' %}" class="btn btn-success">Рекомендации</a>
+        <a href="{% url 'stats:test_history' %}" class="btn btn-info">История тестов</a>
+    </div>
+</div>
+{# --- КОНЕЦ: заменяю старый заголовок и кнопки --- #}
 
 {# Статистика по уровням карточек #}
 <div class="row mb-4">
@@ -166,17 +176,6 @@
                     <p class="text-muted">Нет данных о повторениях за последние 30 дней</p>
                 {% endif %}
             </div>
-        </div>
-    </div>
-</div>
-
-{# Навигация #}
-<div class="row">
-    <div class="col-12">
-        <div class="d-flex gap-2">
-            <a href="{% url 'stats:dashboard' %}" class="btn btn-primary">Назад к статистике</a>
-            <a href="{% url 'stats:recommendations' %}" class="btn btn-success">Рекомендации</a>
-            <a href="{% url 'stats:test_history' %}" class="btn btn-info">История тестов</a>
         </div>
     </div>
 </div>

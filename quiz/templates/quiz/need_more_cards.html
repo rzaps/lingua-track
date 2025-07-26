@@ -1,8 +1,15 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<div class="alert alert-warning mt-4">
+<div class="alert alert-warning mt-4 fs-5">
   Для теста нужно минимум 2 карточки. Пожалуйста, добавьте ещё слова!
 </div>
-<a href="{% url 'words:add_card' %}" class="btn btn-primary">Добавить слово</a>
-<a href="{% url 'words:index' %}" class="btn btn-secondary">К списку слов</a>
+<div class="d-flex gap-2 mt-3">
+  <a href="{% url 'words:add_card' %}" class="btn btn-icon btn-success" title="Добавить слово">
+    <i class="bi bi-plus-lg"></i>
+  </a>
+  <a href="{% url 'words:index' %}" class="btn btn-icon btn-secondary" title="К списку слов">
+    <i class="bi bi-list-ul"></i>
+  </a>
+</div>
 {% endblock %} 

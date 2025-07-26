@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -5,11 +6,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}LinguaTrack{% endblock %}</title>
 
-    <!-- Bootstrap 5 -->
+    <!-- Google Fonts: Inter и Roboto -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Кастомные стили (после Bootstrap для переопределения) -->
+    <link rel="stylesheet" href="{% static 'css/lingua.css' %}">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="{% url 'words:index' %}">LinguaTrack</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
@@ -22,13 +29,7 @@
                         <a class="nav-link" href="{% url 'words:index' %}">Мои слова</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'words:add_card' %}">Добавить</a>
-                    </li>
-                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'words:review_today' %}">Повторение</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'words:card_mode' %}">Карточный режим</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'quiz:choose_test' %}">Тест</a>
@@ -38,17 +39,32 @@
                     </li>
                 </ul>
 
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center navbar-theme">
+                    <!-- Блок тумблера и приветствия: выравнивание по центру через CSS -->
+                    <li class="nav-item me-2">
+                        <button id="theme-toggle" class="btn btn-theme" title="Переключить тему" aria-label="Переключить тему">
+                            <span class="theme-icon"></span>
+                        </button>
+                    </li>
                     {% if user.is_authenticated %}
                         <li class="nav-item">
-                            <span class="navbar-text text-light me-3">Привет, {{ user.username }}!</span>
+                            <!-- Контрастный текст приветствия через CSS -->
+                            <span class="navbar-text navbar-greeting">Привет, {{ user.username }}!</span>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'logout' %}">Выйти</a>
+                            <a href="{% url 'users:telegram_link' %}" class="nav-link" title="{% if user.profile.is_telegram_user %}Telegram подключен{% else %}Связать с Telegram{% endif %}">
+                                <i class="bi bi-telegram" style="color: {% if user.profile.is_telegram_user %}var(--bs-success){% else %}var(--bs-primary){% endif %};"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <form method="post" action="{% url 'users:logout' %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link btn btn-link" style="background:none; border:none; cursor:pointer;">Выйти</button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link" href="{% url 'login' %}">Войти</a>
+                            <a class="nav-link" href="{% url 'users:login' %}">Войти</a>
                         </li>
                     {% endif %}
                 </ul>
@@ -60,7 +76,8 @@
         {% block content %}{% endblock %}
     </div>
 
-    <!-- Bootstrap JS -->
+    <script src="{% static 'js/theme-toggle.js' %}"></script>
+    <!-- Bootstrap JS (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

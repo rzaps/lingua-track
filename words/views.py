@@ -1,10 +1,11 @@
 from django.contrib.auth.decorators import login_required
-from django.http import request, FileResponse, Http404
+from django.http import request, FileResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.utils.encoding import iri_to_uri
 import os
 from django.conf import settings
+from django.views.decorators.http import require_POST
 
 from .forms import CardForm
 from .models import Card, Repetition
@@ -30,11 +31,18 @@ def index(request):
     if search:
         cards = cards.filter(word__icontains=search)  # можно расширить и на перевод, если нужно
 
+    # Для каждой карточки определяем, есть ли она в повторениях на сегодня
+    from .models import Repetition
+    today = timezone.now().date()
+    reps = Repetition.objects.filter(user=request.user, next_review__lte=today)
+    in_repetition = {rep.card_id for rep in reps}
+
     # Формируем контекст для шаблона — отфильтрованные карточки и текущие параметры фильтра
     context = {
         'cards': cards,
         'level': level,
         'search': search,
+        'in_repetition': in_repetition,  # множество id карточек в повторении
     }
     # Выводим шаблон 'words/index.html' с переданным контекстом
     return render(request, 'words/index.html', context)
@@ -48,6 +56,10 @@ def add_card(request):
             card = form.save(commit=False)
             card.user = request.user
             card.save()
+            # Автоматически создаём объект Repetition для новой карточки
+            from .models import Repetition
+            from django.utils import timezone
+            Repetition.objects.create(card=card, user=request.user, next_review=timezone.now().date())
             return redirect('words:index')
     else:
         form = CardForm()
@@ -104,12 +116,18 @@ def card_mode(request):
     current_index = card_list.index(card)
     total = len(card_list)
 
+    # Проверяем, есть ли карточка в повторениях на сегодня
+    from .models import Repetition
+    today = timezone.now().date()
+    in_repetition = Repetition.objects.filter(card=card, user=request.user, next_review__lte=today).exists()
+
     context = {
         'card': card,
         'current_index': current_index + 1,
         'total': total,
         'prev_card_id': card_list[current_index - 1].pk if current_index > 0 else None,
         'next_card_id': card_list[current_index + 1].pk if current_index < total - 1 else None,
+        'in_repetition': in_repetition,
     }
     return render(request, 'words/card_mode.html', context)
 
@@ -147,3 +165,21 @@ def tts_audio(request, word):
     response = FileResponse(open(abs_path, 'rb'), content_type='audio/mpeg')
     response['Content-Disposition'] = f'inline; filename="{iri_to_uri(os.path.basename(abs_path))}"'
     return response
+
+@login_required
+@require_POST
+def add_to_repetition(request):
+    from .models import Card, Repetition
+    from django.utils import timezone
+    card_id = request.POST.get('card_id')
+    try:
+        card = Card.objects.get(pk=card_id, user=request.user)
+    except Card.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'not_found'}, status=404)
+    today = timezone.now().date()
+    rep, created = Repetition.objects.get_or_create(card=card, user=request.user, defaults={'next_review': today})
+    if not created and rep.next_review > today:
+        rep.next_review = today
+        rep.save()
+    # Вернём статус: теперь слово точно в повторении на сегодня
+    return JsonResponse({'success': True, 'in_repetition': True})

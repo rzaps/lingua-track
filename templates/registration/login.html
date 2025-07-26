@@ -22,12 +22,18 @@
     <form method="post" novalidate autocomplete="off">
       {% csrf_token %}
       <div class="mb-3">
-        <label for="id_username" class="form-label">Имя пользователя</label>
-        <input type="text" name="username" autofocus required class="form-control" id="id_username">
+        <label for="id_username" class="form-label">Email</label>
+        <div class="position-relative">
+          <i class="bi bi-envelope position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+          <input type="email" name="username" autofocus required class="form-control ps-5" id="id_username" placeholder="name@example.com">
+        </div>
       </div>
       <div class="mb-3">
         <label for="id_password" class="form-label">Пароль</label>
-        <input type="password" name="password" required class="form-control" id="id_password">
+        <div class="position-relative">
+          <i class="bi bi-lock position-absolute top-50 start-0 translate-middle-y ms-3"></i>
+          <input type="password" name="password" required class="form-control ps-5" id="id_password">
+        </div>
       </div>
       <div class="d-grid mb-2">
         <button type="submit" class="btn btn-success btn-lg">Войти</button>

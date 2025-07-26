@@ -1,7 +1,8 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Тест: выберите правильный ответ</h2>
-<p>Вопрос {{ question_number }} из {{ total }}</p>
+<h2 class="fw-bold mb-3">Тест: выберите правильный ответ</h2>
+<p class="mb-2">Вопрос <strong>{{ question_number }}</strong> из <strong>{{ total }}</strong></p>
 <p>
   {% if direction == 'en-ru' %}
     <strong>Слово:</strong> {{ question }}
@@ -12,12 +13,13 @@
 <form method="post">
   {% csrf_token %}
   <div class="list-group mb-3">
-    {# Перебираем варианты ответа #}
     {% for option in options %}
-      <button type="submit" name="answer" value="{{ option }}" class="list-group-item list-group-item-action">{{ option }}</button>
+      <button type="submit" name="answer" value="{{ option }}" class="list-group-item list-group-item-action py-3 fs-5 text-start">{{ option }}</button>
     {% endfor %}
   </div>
 </form>
-<p>Правильных ответов: {{ score }}</p>
-<a href="{% url 'quiz:choose_test' %}" class="btn btn-link">Сменить настройки</a>
+<p class="mb-3">Правильных ответов: <strong>{{ score }}</strong></p>
+<a href="{% url 'quiz:choose_test' %}" class="btn btn-icon btn-outline-primary" title="Сменить настройки">
+  <i class="bi bi-gear"></i>
+</a>
 {% endblock %} 

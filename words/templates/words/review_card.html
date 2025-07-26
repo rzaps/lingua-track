@@ -1,11 +1,17 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h1>Повторение слова</h1>
-
-<div class="card mb-3">
-    <div class="card-body">
-        <h4 class="card-title">{{ card.word }}</h4>
-        <button class="btn btn-outline-secondary mb-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊 Озвучить</button>
+<h1 class="fw-bold mb-4">Повторение слова</h1>
+<div class="card mb-3 d-flex flex-row align-items-center card-word-row">
+    <!-- Цветная полоска уровня -->
+    <div class="level-bar me-3 {{ card.level }}"></div>
+    <div class="flex-grow-1">
+        <h4 class="card-title mb-1">{{ card.word }}</h4>
+        <p class="card-text mb-2"><strong>Перевод:</strong> {{ card.translation }}</p>
+        <!-- Кнопка озвучивания только иконка -->
+        <button class="btn btn-icon mb-2" onclick="playTTS('{{ card.word|urlencode }}')" title="Озвучить">
+          <i class="bi bi-volume-up"></i>
+        </button>
         <audio id="tts-audio" src="" style="display:none;"></audio>
         <script>
           function playTTS(word) {
@@ -15,12 +21,9 @@
             audio.play();
           }
         </script>
-        <p class="card-text"><strong>Перевод:</strong> {{ card.translation }}</p>
     </div>
 </div>
-
 <p>Как хорошо вы запомнили это слово?</p>
-
 <form method="post">
   {% csrf_token %}
   <div class="btn-group mb-3" role="group">
@@ -29,6 +32,8 @@
       {% endfor %}
   </div>
 </form>
-
-<a href="{% url 'words:review_today' %}" class="btn btn-link">Назад к списку на повторение</a>
+<!-- Кнопка назад -->
+<a href="{% url 'words:review_today' %}" class="btn btn-icon btn-outline-primary" title="Назад к списку на повторение">
+  <i class="bi bi-arrow-left"></i>
+</a>
 {% endblock %}

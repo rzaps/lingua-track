@@ -1,12 +1,16 @@
 {% extends "base.html" %}
 {% block content %}
-<h2>Удалить карточку</h2>
+<h2 class="fw-bold mb-4">Удалить карточку</h2>
 <div class="alert alert-danger">
   <p>Вы уверены, что хотите удалить карточку <strong>{{ card.word }}</strong>?</p>
 </div>
-<form method="post">
+<form method="post" class="d-flex gap-2 mt-3">
   {% csrf_token %}
-  <button type="submit" class="btn btn-danger">Удалить</button>
-  <a href="{% url 'words:index' %}" class="btn btn-secondary">Отмена</a>
+  <button type="submit" class="btn btn-icon btn-danger" title="Удалить">
+    <i class="bi bi-trash"></i>
+  </button>
+  <a href="{% url 'words:index' %}" class="btn btn-icon btn-secondary" title="Отмена">
+    <i class="bi bi-x-lg"></i>
+  </a>
 </form>
 {% endblock %} 

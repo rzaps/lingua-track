@@ -1,18 +1,24 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Просмотр карточки</h2>
-<div class="card mb-3">
-  <div class="card-body">
-    <h4 class="card-title">{{ card.word }}</h4>
-    <p class="card-text"><strong>Перевод:</strong> {{ card.translation }}</p>
+<h2 class="fw-bold mb-4">Просмотр карточки</h2>
+<div class="card mb-3 d-flex flex-row align-items-center card-word-row">
+  <!-- Цветная полоска уровня -->
+  <div class="level-bar me-3 {{ card.level }}"></div>
+  <div class="flex-grow-1">
+    <h4 class="card-title mb-1">{{ card.word }}</h4>
+    <p class="card-text mb-1"><strong>Перевод:</strong> {{ card.translation }}</p>
     {% if card.example %}
-      <p class="card-text"><strong>Пример:</strong> {{ card.example }}</p>
+      <p class="card-text mb-1"><strong>Пример:</strong> {{ card.example }}</p>
     {% endif %}
     {% if card.note %}
-      <p class="card-text"><strong>Примечание:</strong> {{ card.note }}</p>
+      <p class="card-text mb-1"><strong>Примечание:</strong> {{ card.note }}</p>
     {% endif %}
-    <p class="card-text"><strong>Уровень:</strong> {{ card.get_level_display }}</p>
-    <button class="btn btn-outline-secondary mb-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊 Озвучить</button>
+    <p class="card-text mb-2"><strong>Уровень:</strong> {{ card.get_level_display }}</p>
+    <!-- Кнопка озвучивания только иконка -->
+    <button class="btn btn-icon mb-2" onclick="playTTS('{{ card.word|urlencode }}')" title="Озвучить">
+      <i class="bi bi-volume-up"></i>
+    </button>
     <audio id="tts-audio" src="" style="display:none;"></audio>
     <script>
       function playTTS(word) {
@@ -24,7 +30,15 @@
     </script>
   </div>
 </div>
-<a href="{% url 'words:index' %}" class="btn btn-primary">Назад к списку</a>
-<a href="{% url 'words:edit_card' card.pk %}" class="btn btn-warning">Редактировать</a>
-<a href="{% url 'words:delete_card' card.pk %}" class="btn btn-danger">Удалить</a>
+<div class="d-flex gap-1 mt-2">
+  <a href="{% url 'words:index' %}" class="btn btn-icon btn-outline-primary" title="Назад к списку">
+    <i class="bi bi-arrow-left"></i>
+  </a>
+  <a href="{% url 'words:edit_card' card.pk %}" class="btn btn-icon btn-warning" title="Редактировать">
+    <i class="bi bi-pencil"></i>
+  </a>
+  <a href="{% url 'words:delete_card' card.pk %}" class="btn btn-icon btn-danger" title="Удалить">
+    <i class="bi bi-trash"></i>
+  </a>
+</div>
 {% endblock %} 

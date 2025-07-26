@@ -1,49 +1,63 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Выберите тип теста и направление</h2>
-<form method="post">
-  {% csrf_token %}
-  
-  {# Выбор типа теста #}
-  <div class="mb-4">
-    <h4>Тип теста:</h4>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="test_type" id="multiple_choice" value="multiple_choice" checked>
-      <label class="form-check-label" for="multiple_choice">
-        <strong>Множественный выбор</strong> — выберите правильный ответ из 4 вариантов
-      </label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="test_type" id="typing" value="typing">
-      <label class="form-check-label" for="typing">
-        <strong>Ввод с клавиатуры</strong> — введите правильный ответ
-      </label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="test_type" id="matching" value="matching">
-      <label class="form-check-label" for="matching">
-        <strong>Сопоставление</strong> — соедините слова с переводами
-      </label>
+<div class="py-4 text-start" id="choose-test-root">
+  <h1 class="fw-bold mb-4">Выберите направление и тип теста</h1>
+  <div id="step-direction">
+    <h4 class="fw-bold mb-4">Направление:</h4>
+    <div class="d-flex flex-column gap-3">
+      <button class="btn btn-outline-primary btn-lg direction-btn" data-direction="en-ru">
+        <i class="bi bi-arrow-right-circle me-2"></i> Английский <span class="mx-1">→</span> Русский
+      </button>
+      <button class="btn btn-outline-primary btn-lg direction-btn" data-direction="ru-en">
+        <i class="bi bi-arrow-right-circle me-2"></i> Русский <span class="mx-1">→</span> Английский
+      </button>
     </div>
   </div>
-
-  {# Выбор направления #}
-  <div class="mb-4">
-    <h4>Направление:</h4>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="direction" id="enru" value="en-ru" checked>
-      <label class="form-check-label" for="enru">
-        <strong>Английский → Русский</strong> — переводите с английского на русский
-      </label>
-    </div>
-    <div class="form-check">
-      <input class="form-check-input" type="radio" name="direction" id="ruen" value="ru-en">
-      <label class="form-check-label" for="ruen">
-        <strong>Русский → Английский</strong> — переводите с русского на английский
-      </label>
+  <div id="step-type" style="display:none;">
+    <h4 class="fw-bold mb-4">Тип теста:</h4>
+    <div class="d-flex flex-column gap-3">
+      <button class="btn btn-outline-success btn-lg test-btn" data-type="multiple_choice">
+        <i class="bi bi-list-ol me-2"></i> Множественный выбор
+      </button>
+      <button class="btn btn-outline-success btn-lg test-btn" data-type="typing">
+        <i class="bi bi-keyboard me-2"></i> Ввод с клавиатуры
+      </button>
+      <button class="btn btn-outline-success btn-lg test-btn" data-type="matching">
+        <i class="bi bi-shuffle me-2"></i> Сопоставление
+      </button>
     </div>
   </div>
-
-  <button type="submit" class="btn btn-primary btn-lg">Начать тест</button>
-</form>
+</div>
+<script>
+  let selectedDirection = null;
+  document.querySelectorAll('.direction-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      selectedDirection = btn.dataset.direction;
+      document.getElementById('step-direction').style.display = 'none';
+      document.getElementById('step-type').style.display = '';
+    });
+  });
+  document.querySelectorAll('.test-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const testType = btn.dataset.type;
+      // Формируем URL для перехода к тесту
+      let url = '';
+      if (testType === 'multiple_choice') {
+        url = `{% url 'quiz:multiple_choice' %}`;
+      } else if (testType === 'typing') {
+        url = `{% url 'quiz:typing' %}`;
+      } else if (testType === 'matching') {
+        url = `{% url 'quiz:matching' %}`;
+      }
+      // Добавляем параметры направления
+      if (url.includes('?')) {
+        url += `&direction=${selectedDirection}`;
+      } else {
+        url += `?direction=${selectedDirection}`;
+      }
+      window.location.href = url;
+    });
+  });
+</script>
 {% endblock %} 

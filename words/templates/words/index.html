@@ -1,39 +1,66 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block content %}
-<h1>Мои слова</h1>
-
-<form method="get" class="mb-3">
-  <select name="level" class="form-select">
-    <option value="">Все уровни</option>
-    <option value="beginner" {% if level == 'beginner' %}selected{% endif %}>Начальный</option>
-    <option value="intermediate" {% if level == 'intermediate' %}selected{% endif %}>Средний</option>
-    <option value="advanced" {% if level == 'advanced' %}selected{% endif %}>Продвинутый</option>
-  </select>
-
-  <input type="text" name="search" placeholder="Поиск слова" value="{{ search|default:'' }}" class="form-control mt-2"/>
-
-  <button type="submit" class="btn btn-primary mt-2">Фильтровать</button>
+<div class="d-flex flex-wrap align-items-center justify-content-between mb-4 gap-2">
+  <h1 class="fw-bold mb-0">Мои слова</h1>
+  <div class="d-flex align-items-center gap-2">
+    <a href="{% url 'words:add_card' %}" class="btn btn-success d-flex align-items-center px-3 py-2" title="Добавить слово">
+      <i class="bi bi-plus-lg me-1"></i> <span class="d-none d-md-inline">Добавить</span>
+    </a>
+    <div class="toggle-switch">
+      <a href="{% url 'words:index' %}" class="btn btn-outline-primary {% if request.resolver_match.url_name == 'index' %}active{% endif %} d-flex align-items-center px-3 py-2" title="Список слов">
+        <i class="bi bi-list-ul"></i>
+      </a>
+      <a href="{% url 'words:card_mode' %}" class="btn btn-outline-primary {% if request.resolver_match.url_name == 'card_mode' %}active{% endif %} d-flex align-items-center px-3 py-2" title="Карточный режим">
+        <i class="bi bi-collection-play"></i>
+      </a>
+    </div>
+  </div>
+</div>
+<form method="get" class="row g-3 align-items-center mb-4" id="filter-form" autocomplete="off">
+  <div class="col-md-3 col-12">
+    <select name="level" class="form-select" onchange="this.form.submit()">
+      <option value="">Все уровни</option>
+      <option value="beginner" {% if level == 'beginner' %}selected{% endif %}>Начальный</option>
+      <option value="intermediate" {% if level == 'intermediate' %}selected{% endif %}>Средний</option>
+      <option value="advanced" {% if level == 'advanced' %}selected{% endif %}>Продвинутый</option>
+    </select>
+  </div>
+  <div class="col-md-6 col-12">
+    <input type="text" name="search" placeholder="Поиск слова" value="{{ search|default:'' }}" class="form-control" oninput="this.form.submit()" />
+  </div>
 </form>
-
-<a href="{% url 'words:index' %}" class="btn btn-outline-primary">Список слов</a>
-<a href="{% url 'words:card_mode' %}" class="btn btn-primary">Карточный режим</a>
-<a href="{% url 'quiz:choose_test' %}" class="btn btn-success">Тест</a>
-
-
-<a href="{% url 'words:add_card' %}" class="btn btn-primary mb-3">Добавить новое слово</a>
 
 {% if cards %}
     <ul class="list-group">
     {% for card in cards %}
-        <li class="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-                <strong>{{ card.word }}</strong> — {{ card.translation }} ({{ card.get_level_display }})
-                <button class="btn btn-outline-secondary btn-sm ms-2" onclick="playTTS('{{ card.word|urlencode }}')">🔊</button>
+        <li class="list-group-item d-flex justify-content-between align-items-center word-row">
+            <!-- Цветная полоска уровня -->
+            <div class="level-bar me-3 {{ card.level }}"></div>
+            <div class="flex-grow-1 d-flex align-items-center gap-2">
+                <strong>{{ card.word }}</strong> — {{ card.translation }}
+                <!-- Кнопка озвучивания только иконка -->
+                <button class="btn btn-icon ms-2" onclick="playTTS('{{ card.word|urlencode }}')" title="Озвучить">
+                  <i class="bi bi-volume-up"></i>
+                </button>
             </div>
-            <div>
-                <a href="{% url 'words:card_detail' card.pk %}" class="btn btn-sm btn-info">Просмотр</a>
-                <a href="{% url 'words:edit_card' card.pk %}" class="btn btn-sm btn-warning">Редактировать</a>
-                <a href="{% url 'words:delete_card' card.pk %}" class="btn btn-sm btn-danger">Удалить</a>
+            <div class="d-flex gap-1">
+                <!-- Кнопка Повторить с динамическим цветом -->
+                <button class="btn btn-icon btn-repeat {% if card.id in in_repetition %}in-rep{% endif %}" 
+                        data-card-id="{{ card.id }}" title="Повторить">
+                  <i class="bi bi-arrow-repeat"></i>
+                </button>
+                <!-- Кнопки действий только иконки -->
+                <a href="{% url 'words:card_detail' card.pk %}" class="btn btn-icon btn-info" title="Просмотр">
+                  <i class="bi bi-eye"></i>
+                </a>
+                <a href="{% url 'words:edit_card' card.pk %}" class="btn btn-icon btn-warning" title="Редактировать">
+                  <i class="bi bi-pencil"></i>
+                </a>
+                <a href="{% url 'words:delete_card' card.pk %}" class="btn btn-icon btn-danger" title="Удалить">
+                  <i class="bi bi-trash"></i>
+                </a>
             </div>
         </li>
     {% endfor %}
@@ -46,9 +73,29 @@
         audio.style.display = 'block';
         audio.play();
       }
+      // --- AJAX для кнопки повторения ---
+      document.querySelectorAll('.btn-repeat').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (btn.classList.contains('in-rep')) return; // Уже в повторении
+          fetch('{% url "words:add_to_repetition" %}', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-CSRFToken': '{{ csrf_token }}',
+            },
+            body: 'card_id=' + btn.dataset.cardId
+          })
+          .then(r => r.json())
+          .then(data => {
+            if (data.success && data.in_repetition) {
+              btn.classList.add('in-rep');
+            }
+          });
+        });
+      });
     </script>
 {% else %}
     <p>Пока нет добавленных слов.</p>
 {% endif %}
-
 {% endblock %}

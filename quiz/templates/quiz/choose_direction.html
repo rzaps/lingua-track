@@ -1,20 +1,23 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Выберите направление теста</h2>
+<h1 class="fw-bold mb-4">Выберите направление теста</h1>
 <form method="post">
   {% csrf_token %}
-  <div class="form-check">
+  <div class="form-check mb-3">
     <input class="form-check-input" type="radio" name="direction" id="enru" value="en-ru" checked>
-    <label class="form-check-label" for="enru">
-      Английский → Русский (выбрать перевод)
+    <label class="form-check-label fw-semibold" for="enru">
+      Английский <i class="bi bi-arrow-right mx-1"></i> Русский <span class="text-muted">(выбрать перевод)</span>
     </label>
   </div>
-  <div class="form-check">
+  <div class="form-check mb-4">
     <input class="form-check-input" type="radio" name="direction" id="ruen" value="ru-en">
-    <label class="form-check-label" for="ruen">
-      Русский → Английский (выбрать слово)
+    <label class="form-check-label fw-semibold" for="ruen">
+      Русский <i class="bi bi-arrow-right mx-1"></i> Английский <span class="text-muted">(выбрать слово)</span>
     </label>
   </div>
-  <button type="submit" class="btn btn-primary mt-3">Начать тест</button>
+  <button type="submit" class="btn btn-success btn-lg d-flex align-items-center gap-2 px-4">
+    <i class="bi bi-play-fill"></i> <span>Начать тест</span>
+  </button>
 </form>
 {% endblock %} 

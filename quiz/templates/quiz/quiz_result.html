@@ -1,7 +1,14 @@
 {% extends "base.html" %}
+{% load static %}
 {% block content %}
-<h2>Тест завершён!</h2>
-<p>Ваш результат: <strong>{{ score }}</strong> из <strong>{{ total }}</strong></p>
-<a href="{% url 'quiz:multiple_choice' %}" class="btn btn-primary">Пройти ещё раз</a>
-<a href="{% url 'words:index' %}" class="btn btn-secondary">К списку слов</a>
+<h2 class="fw-bold mb-4">Тест завершён!</h2>
+<p class="fs-4 mb-4">Ваш результат: <strong>{{ score }}</strong> из <strong>{{ total }}</strong></p>
+<div class="d-flex gap-2">
+  <a href="{% url 'quiz:multiple_choice' %}" class="btn btn-icon btn-success" title="Пройти ещё раз">
+    <i class="bi bi-arrow-clockwise"></i>
+  </a>
+  <a href="{% url 'words:index' %}" class="btn btn-icon btn-secondary" title="К списку слов">
+    <i class="bi bi-list-ul"></i>
+  </a>
+</div>
 {% endblock %} 

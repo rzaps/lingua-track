@@ -15,6 +15,7 @@ urlpatterns = [
     # --- Повторение слов (интервальный тренажёр) ---
     path('review/', views.review_today, name='review_today'),  # слова на повторение
     path('review/<int:pk>/', views.review_card, name='review_card'),  # конкретное слово
+    path('add_to_repetition/', views.add_to_repetition, name='add_to_repetition'),  # AJAX: добавить в повторения
 
     # --- Озвучка ---
     path('tts/<str:word>/', views.tts_audio, name='tts_audio'),  # Озвучка слова

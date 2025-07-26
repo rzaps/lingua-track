@@ -4,8 +4,6 @@
 
 import os
 import django
-from django.contrib.auth.models import User
-from django.utils import timezone
 from datetime import date
 
 # Настройка Django
@@ -13,6 +11,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'lingua_track.settings')
 django.setup()
 
 # Импортируем модели после настройки Django
+from django.contrib.auth.models import User
+from django.utils import timezone
 from words.models import Card, Repetition
 from users.models import UserProfile
 from stats.models import TestResult, UserStats
@@ -27,6 +27,9 @@ def get_user_by_telegram_id(telegram_id: int) -> User:
         profile = UserProfile.objects.get(telegram_id=telegram_id)
         return profile.user
     except UserProfile.DoesNotExist:
+        # Проверяем, не существует ли уже пользователь с таким telegram_id (дополнительная защита)
+        if UserProfile.objects.filter(telegram_id=telegram_id).exists():
+            return UserProfile.objects.get(telegram_id=telegram_id).user
         # Создаём нового пользователя с профилем
         username = f"telegram_{telegram_id}"
         user = User.objects.create_user(
@@ -34,14 +37,11 @@ def get_user_by_telegram_id(telegram_id: int) -> User:
             email=f"{username}@linguatrack.local",
             password=f"{username}_password"
         )
-        
-        # Создаём профиль пользователя
         UserProfile.objects.create(
             user=user,
             telegram_id=telegram_id,
             is_telegram_user=True
         )
-        
         return user
 
 def link_telegram_to_existing_user(telegram_id: int, telegram_username: str, django_username: str) -> User:
@@ -49,17 +49,15 @@ def link_telegram_to_existing_user(telegram_id: int, telegram_username: str, dja
     Связывает существующего пользователя Django с Telegram
     """
     try:
-        # Ищем пользователя Django
-        user = User.objects.get(username=django_username)
-        
-        # Проверяем, не связан ли уже этот Telegram ID с другим пользователем
+        # Проверяем, не связан ли уже этот Telegram ID с каким-либо пользователем
         try:
             existing_profile = UserProfile.objects.get(telegram_id=telegram_id)
-            if existing_profile.user != user:
-                raise ValueError(f"Telegram ID {telegram_id} уже связан с пользователем {existing_profile.user.username}")
+            if existing_profile.user.username != django_username:
+                raise ValueError(f"Этот Telegram ID уже привязан к другому аккаунту: {existing_profile.user.username}")
         except UserProfile.DoesNotExist:
             pass
-        
+        # Ищем пользователя Django
+        user = User.objects.get(username=django_username)
         # Создаём или обновляем профиль
         profile, created = UserProfile.objects.get_or_create(
             user=user,
@@ -69,16 +67,13 @@ def link_telegram_to_existing_user(telegram_id: int, telegram_username: str, dja
                 'is_telegram_user': True
             }
         )
-        
         if not created:
             # Обновляем существующий профиль
             profile.telegram_id = telegram_id
             profile.telegram_username = telegram_username
             profile.is_telegram_user = True
             profile.save()
-        
         return user
-        
     except User.DoesNotExist:
         raise ValueError(f"Пользователь Django с username '{django_username}' не найден")
 
