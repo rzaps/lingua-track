@@ -1,1 +1,5 @@
-gTTS 
+pytest
+pytest-django
+pytest-asyncio
+aiogram
+aiogram-test 

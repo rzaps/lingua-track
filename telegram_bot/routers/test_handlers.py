@@ -133,4 +133,11 @@ async def finish_test(message: Message, user_id: int):
     # Форматируем результаты через сервис
     final_text = TestService.format_test_results(results)
     
-    await message.answer(final_text) 
+    await message.answer(final_text)
+    # Показываем главное меню
+    from keyboards.main_keyboard import get_main_keyboard
+    from config import Config
+    await message.answer(
+        Config.MESSAGES['welcome'],
+        reply_markup=get_main_keyboard()
+    ) 

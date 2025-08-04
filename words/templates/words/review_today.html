@@ -17,10 +17,7 @@
                 </button>
             </div>
             <div class="d-flex gap-1">
-                <!-- Кнопка Повторить -->
-                <a href="{% url 'words:review_card' card.pk %}" class="btn btn-icon btn-outline-primary" title="Повторить">
-                  <i class="bi bi-arrow-repeat"></i>
-                </a>
+
                 <!-- Кнопка Просмотр -->
                 <a href="{% url 'words:card_detail' card.pk %}" class="btn btn-icon btn-info" title="Просмотр">
                   <i class="bi bi-eye"></i>
