@@ -13,9 +13,15 @@ django.setup()
 # Импортируем модели после настройки Django
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models import Sum
 from words.models import Card, Repetition
 from users.models import UserProfile
 from stats.models import TestResult, UserStats
+from django.core.cache import cache
+
+CACHE_TTL_SHORT = 60  # 1 минута
+CACHE_TTL_PROGRESS = 300  # 5 минут
+
 
 def get_user_by_telegram_id(telegram_id: int) -> User:
     """
@@ -99,15 +105,24 @@ def get_today_cards(user: User) -> list:
     """
     Получает карточки на повторение сегодня
     """
+    cache_key = f"today_cards:{user.id}:{timezone.now().date()}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     today = timezone.now().date()
-    repetitions = Repetition.objects.filter(
+    # Получаем уникальные card_id для избежания дублирования
+    card_ids = Repetition.objects.filter(
         user=user, 
         next_review__lte=today
-    ).select_related('card')
+    ).values_list('card_id', flat=True).distinct()
     
-    return [rep.card for rep in repetitions]
+    # Получаем карточки по уникальным ID
+    cards = list(Card.objects.filter(id__in=card_ids))
+    cache.set(cache_key, cards, CACHE_TTL_SHORT)
+    return cards
 
-def get_user_cards(user: User, page: int = 1, per_page: int = 10) -> dict:
+def get_user_cards_paginated(user: User, page: int = 1, per_page: int = 10) -> dict:
     """
     Получает карточки пользователя с пагинацией
     """
@@ -129,6 +144,11 @@ def get_user_progress(user: User) -> dict:
     """
     Получает статистику пользователя
     """
+    cache_key = f"user_progress:{user.id}"
+    cached = cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     # Получаем или создаём статистику
     user_stats, created = UserStats.objects.get_or_create(user=user)
     
@@ -141,15 +161,14 @@ def get_user_progress(user: User) -> dict:
     
     # Статистика повторений
     repetitions = Repetition.objects.filter(user=user)
-    user_stats.total_reviews = repetitions.aggregate(
-        total=Sum('total_reviews')
-    )['total'] or 0
-    user_stats.successful_reviews = repetitions.aggregate(
-        success=Sum('successful_reviews')
-    )['success'] or 0
-    user_stats.failed_reviews = repetitions.aggregate(
-        failed=Sum('failed_reviews')
-    )['failed'] or 0
+    agg = repetitions.aggregate(
+        total=Sum('total_reviews'),
+        success=Sum('successful_reviews'),
+        failed=Sum('failed_reviews'),
+    )
+    user_stats.total_reviews = agg['total'] or 0
+    user_stats.successful_reviews = agg['success'] or 0
+    user_stats.failed_reviews = agg['failed'] or 0
     
     # Статистика тестов
     test_results = TestResult.objects.filter(user=user)
@@ -160,7 +179,7 @@ def get_user_progress(user: User) -> dict:
     
     user_stats.save()
     
-    return {
+    result = {
         'total_cards': user_stats.total_cards,
         'total_reviews': user_stats.total_reviews,
         'total_tests': user_stats.total_tests,
@@ -170,6 +189,8 @@ def get_user_progress(user: User) -> dict:
         'intermediate_cards': user_stats.intermediate_cards,
         'advanced_cards': user_stats.advanced_cards,
     }
+    cache.set(cache_key, result, CACHE_TTL_PROGRESS)
+    return result
 
 def get_random_cards_for_test(user: User, count: int = 5) -> list:
     """
@@ -228,7 +249,4 @@ def update_repetition_stats(user: User, card: Card, quality: int):
     from words.utils import update_sm2
     update_sm2(repetition, quality)
     
-    repetition.save()
-
-# Импорт для агрегатных функций
-from django.db.models import Sum 
+    repetition.save() 

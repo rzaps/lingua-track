@@ -8,10 +8,15 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from asgiref.sync import sync_to_async
+import logging
+
+logger = logging.getLogger(__name__)
 
 from config import Config
 from keyboards.main_keyboard import get_test_start_keyboard, get_test_answer_keyboard
 from services.test_service import TestService
+from services.user_service import UserService
 
 router = Router()
 
@@ -24,8 +29,11 @@ class TestStates(StatesGroup):
 async def cmd_test(message: Message, state: FSMContext):
     """Обработчик команды /test - начало теста"""
     try:
-        # Создаём тест через сервис
-        test_data = TestService.create_test(message.from_user.id)
+        # Гарантируем, что пользователь существует (создаём при необходимости)
+        await sync_to_async(UserService.get_or_create_user)(message.from_user.id)
+        
+        # Создаём тест через сервис (внутри используются ORM-вызовы)
+        test_data = await sync_to_async(TestService.create_test)(message.from_user.id)
         
         if not test_data:
             await message.answer(Config.MESSAGES['no_cards'])
@@ -40,6 +48,8 @@ async def cmd_test(message: Message, state: FSMContext):
         await state.set_state(TestStates.waiting_for_start)
         
     except Exception as e:
+        # Логируем реальную причину для отладки
+        logger.exception("Ошибка в /test")
         await message.answer(Config.MESSAGES['not_registered'])
 
 @router.message(F.text == "📝 Пройти тест")
@@ -52,7 +62,7 @@ async def callback_test_start(callback: CallbackQuery, state: FSMContext):
     """Обработчик начала теста"""
     user_id = callback.from_user.id
     
-    if not TestService.get_test(user_id):
+    if not await sync_to_async(TestService.get_test)(user_id):
         await callback.answer("Тест не найден. Начните заново с /test")
         return
     
@@ -66,7 +76,7 @@ async def callback_test_cancel(callback: CallbackQuery, state: FSMContext):
     """Обработчик отмены теста"""
     user_id = callback.from_user.id
     
-    TestService.remove_test(user_id)
+    await sync_to_async(TestService.remove_test)(user_id)
     
     await callback.message.edit_text("❌ Тест отменён")
     await state.clear()
@@ -78,8 +88,8 @@ async def callback_test_answer(callback: CallbackQuery, state: FSMContext):
     user_id = callback.from_user.id
     user_answer = callback.data.split(":", 1)[1]
     
-    # Обрабатываем ответ через сервис
-    result = TestService.process_answer(user_id, user_answer)
+    # Обрабатываем ответ через сервис (без ORM, в памяти)
+    result = await sync_to_async(TestService.process_answer)(user_id, user_answer)
     
     if not result:
         await callback.answer("Тест не найден")
@@ -106,8 +116,8 @@ async def callback_test_answer(callback: CallbackQuery, state: FSMContext):
 
 async def ask_question(message: Message, user_id: int):
     """Задаёт вопрос теста"""
-    # Получаем текущий вопрос через сервис
-    question_data = TestService.get_current_question(user_id)
+    # Получаем текущий вопрос через сервис (есть обращения к ORM)
+    question_data = await sync_to_async(TestService.get_current_question)(user_id)
     
     if not question_data:
         return
@@ -123,8 +133,8 @@ async def ask_question(message: Message, user_id: int):
 
 async def finish_test(message: Message, user_id: int):
     """Завершает тест и показывает результаты"""
-    # Завершаем тест через сервис
-    results = TestService.finish_test(user_id)
+    # Завершаем тест через сервис (сохраняет результат в БД)
+    results = await sync_to_async(TestService.finish_test)(user_id)
     
     if not results:
         await message.answer("❌ Ошибка при завершении теста")

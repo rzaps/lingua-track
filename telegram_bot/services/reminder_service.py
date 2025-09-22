@@ -7,6 +7,9 @@ from datetime import datetime, time
 from typing import List
 from utils.django_utils import get_today_cards
 from django.contrib.auth.models import User
+import logging
+
+logger = logging.getLogger(__name__)
 
 class ReminderService:
     """Сервис для отправки напоминаний"""
@@ -44,14 +47,16 @@ class ReminderService:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                print(f"Ошибка в планировщике напоминаний: {e}")
+                logger.error(f"Ошибка в планировщике напоминаний: {e}")
                 await asyncio.sleep(60)  # Ждём минуту перед повтором
     
     async def _send_daily_reminders(self):
         """Отправляет ежедневные напоминания всем пользователям"""
         try:
+            from asgiref.sync import sync_to_async
+            
             # Получаем всех пользователей с Telegram ID
-            users = User.objects.filter(username__startswith='telegram_')
+            users = await sync_to_async(list)(User.objects.filter(username__startswith='telegram_'))
             
             for user in users:
                 try:
@@ -59,18 +64,18 @@ class ReminderService:
                     telegram_id = int(user.username.replace('telegram_', ''))
                     
                     # Проверяем, есть ли слова на повторение
-                    today_cards = get_today_cards(user)
+                    today_cards = await sync_to_async(get_today_cards)(user)
                     
                     if today_cards:
                         # Отправляем напоминание
                         await self._send_reminder(telegram_id, today_cards)
                     
                 except (ValueError, Exception) as e:
-                    print(f"Ошибка при отправке напоминания пользователю {user.username}: {e}")
+                    logger.error(f"Ошибка при отправке напоминания пользователю {user.username}: {e}")
                     continue
                     
         except Exception as e:
-            print(f"Ошибка при отправке ежедневных напоминаний: {e}")
+            logger.error(f"Ошибка при отправке ежедневных напоминаний: {e}")
     
     async def _send_reminder(self, telegram_id: int, cards: List):
         """Отправляет напоминание конкретному пользователю"""
@@ -96,17 +101,19 @@ class ReminderService:
             await self.bot.send_message(telegram_id, message)
             
         except Exception as e:
-            print(f"Ошибка при отправке напоминания {telegram_id}: {e}")
+            logger.error(f"Ошибка при отправке напоминания {telegram_id}: {e}")
     
     async def send_manual_reminder(self, telegram_id: int):
         """Отправляет ручное напоминание (для тестирования)"""
         try:
             # Получаем пользователя
             from utils.django_utils import get_user_by_telegram_id
-            user = get_user_by_telegram_id(telegram_id)
+            from asgiref.sync import sync_to_async
+            
+            user = await sync_to_async(get_user_by_telegram_id)(telegram_id)
             
             # Проверяем слова на повторение
-            today_cards = get_today_cards(user)
+            today_cards = await sync_to_async(get_today_cards)(user)
             
             if today_cards:
                 await self._send_reminder(telegram_id, today_cards)
@@ -117,4 +124,4 @@ class ReminderService:
                 )
                 
         except Exception as e:
-            print(f"Ошибка при отправке ручного напоминания: {e}") 
+            logger.error(f"Ошибка при отправке ручного напоминания: {e}") 

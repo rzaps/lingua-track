@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import UserProfile
+from .models import UserProfile, TelegramLinkToken
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
@@ -21,3 +21,13 @@ class UserProfileAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+@admin.register(TelegramLinkToken)
+class TelegramLinkTokenAdmin(admin.ModelAdmin):
+    list_display = ['user', 'token_type', 'is_used', 'created_at', 'expires_at']
+    list_filter = ['token_type', 'is_used', 'created_at']
+    search_fields = ['user__username', 'token']
+    readonly_fields = ['token', 'created_at', 'used_at']
+    
+    def has_add_permission(self, request):
+        return False  # Токены создаются только программно

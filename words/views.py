@@ -56,10 +56,7 @@ def add_card(request):
             card = form.save(commit=False)
             card.user = request.user
             card.save()
-            # Автоматически создаём объект Repetition для новой карточки
-            from .models import Repetition
-            from django.utils import timezone
-            Repetition.objects.create(card=card, user=request.user, next_review=timezone.now().date())
+            # Не создаём автоматически Repetition - пользователь сам добавит через кнопку
             return redirect('words:index')
     else:
         form = CardForm()
@@ -137,15 +134,32 @@ def card_mode(request):
 def review_today(request):
     today = timezone.now().date()
     # Выбираем только карточки, у которых есть повторение на сегодня или раньше
-    repetitions = Repetition.objects.filter(user=request.user, next_review__lte=today)
-    cards = [rep.card for rep in repetitions]
+    # Получаем уникальные card_id для избежания дублирования
+    card_ids = Repetition.objects.filter(
+        user=request.user, 
+        next_review__lte=today
+    ).values_list('card_id', flat=True).distinct()
+    
+    # Получаем карточки по уникальным ID
+    cards = Card.objects.filter(id__in=card_ids)
+    
     return render(request, 'words/review_today.html', {'cards': cards})
 
 # Повторение конкретного слова (карточки)
 @login_required
 def review_card(request, pk):
     card = get_object_or_404(Card, pk=pk, user=request.user)
-    repetition, created = Repetition.objects.get_or_create(card=card, user=request.user)
+    
+    # Получаем существующую запись Repetition или создаём новую
+    try:
+        repetition = Repetition.objects.get(card=card, user=request.user)
+    except Repetition.DoesNotExist:
+        # Создаём новую запись только если её нет
+        repetition = Repetition.objects.create(
+            card=card, 
+            user=request.user,
+            next_review=timezone.now().date()
+        )
 
     if request.method == 'POST':
         quality = int(request.POST.get('quality', 0))

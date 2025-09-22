@@ -5,6 +5,9 @@
 import os
 import re
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TTSService:
     """Сервис для работы с озвучкой слов"""
@@ -66,7 +69,7 @@ class TTSService:
             return absolute_path
             
         except Exception as e:
-            print(f"Ошибка при генерации TTS: {e}")
+            logger.exception("Ошибка при генерации TTS")
             return None
     
     @staticmethod

@@ -22,6 +22,12 @@ from keyboards.main_keyboard import get_main_keyboard, get_cards_navigation_keyb
 from services.user_service import UserService
 from utils.django_utils import get_user_by_telegram_id, link_telegram_to_existing_user, get_user_telegram_info
 
+import logging
+from services.http_client import HttpClient
+_client = HttpClient()
+
+logger = logging.getLogger(__name__)
+
 router = Router()
 
 # Клавиатура для новых пользователей (только одна кнопка)
@@ -44,10 +50,23 @@ def get_link_inline_keyboard():
 
 @router.message(Command("start"))
 async def cmd_start(message: Message, state: FSMContext):
+    """Обработчик команды /start с поддержкой токенов привязки"""
     telegram_id = message.from_user.id
+    telegram_username = message.from_user.username
+    
+    # Проверяем, есть ли параметр start (токен привязки)
+    start_param = message.text.split(' ', 1)[1] if len(message.text.split()) > 1 else None
+    
+    if start_param:
+        # Обрабатываем токен привязки
+        await handle_link_token(message, start_param, telegram_id, telegram_username)
+        return
+    
+    # Обычная обработка /start
     user = await sync_to_async(get_user_by_telegram_id)(telegram_id)
+    
     # Проверяем, есть ли у пользователя реальный email (а не технический)
-    if user.email.startswith("telegram_") and user.email.endswith("@linguatrack.local"):
+    if user and user.email.startswith("telegram_") and user.email.endswith("@linguatrack.local"):
         # Новый пользователь — только Telegram
         await message.answer(
             "👋 Добро пожаловать в LinguaTrack!\n\n"
@@ -61,6 +80,47 @@ async def cmd_start(message: Message, state: FSMContext):
         await message.answer(
             Config.MESSAGES['welcome'],
             reply_markup=get_main_keyboard()
+        )
+
+async def handle_link_token(message: Message, token: str, telegram_id: int, telegram_username: str):
+    """Обрабатывает токен привязки от сайта"""
+    try:
+        data = _client.post_json(
+            f"{Config.SITE_URL}/users/api/v1/telegram-link-callback/",
+            {
+                'token': token,
+                'telegram_id': telegram_id,
+                'telegram_username': telegram_username
+            }
+        )
+        if data.get('success'):
+            username = data.get('username', 'пользователь')
+            await message.answer(
+                f"✅ Отлично! Ваш аккаунт успешно привязан к Telegram!\n\n"
+                f"👤 Пользователь: {username}\n"
+                f"🔗 Теперь вы можете:\n"
+                f"• Просматривать карточки: /cards\n"
+                f"• Проходить тесты: /test\n"
+                f"• Смотреть статистику: /progress\n"
+                f"• Получать напоминания о повторениях\n\n"
+                f"🎉 Добро пожаловать в LinguaTrack!",
+                reply_markup=get_main_keyboard()
+            )
+        else:
+            error_msg = data.get('error', 'Неизвестная ошибка')
+            await message.answer(
+                f"❌ Ошибка привязки аккаунта: {error_msg}\n\n"
+                f"Возможные причины:\n"
+                f"• Токен истек (действителен 5 минут)\n"
+                f"• Токен уже использован\n"
+                f"• Неверный токен\n\n"
+                f"Попробуйте сгенерировать новую ссылку на сайте.",
+                reply_markup=get_link_keyboard()
+            )
+    except Exception:
+        await message.answer(
+            "❌ Ошибка соединения с сайтом. Попробуйте позже или обратитесь к администратору.",
+            reply_markup=get_link_keyboard()
         )
 
 @router.message(Command("help"))
@@ -87,6 +147,7 @@ async def cmd_today(message: Message):
         await message.answer(cards_text, parse_mode="HTML")
         
     except Exception as e:
+        logger.exception("Ошибка в /today")
         await message.answer(Config.MESSAGES['not_registered'])
 
 @router.message(Command("progress"))
@@ -99,15 +160,110 @@ async def cmd_progress(message: Message):
         # Форматируем статистику через сервис
         stats_text = await sync_to_async(UserService.format_statistics_for_display)(progress)
         
-        await message.answer(stats_text)
+        await message.answer(stats_text, parse_mode="HTML")
         
     except Exception as e:
+        logger.exception("Ошибка в /progress")
         await message.answer(Config.MESSAGES['not_registered'])
 
 @router.message(Command("cards"))
 async def cmd_cards(message: Message):
-    """Обработчик команды /cards - список карточек"""
-    await show_cards_page(message, 1)
+    """Обработчик команды /cards - список карточек пользователя"""
+    try:
+        # Получаем карточки через сервис
+        cards = await sync_to_async(UserService.get_user_cards)(message.from_user.id)
+        
+        if not cards:
+            await message.answer(Config.MESSAGES['no_cards'])
+            return
+        
+        # Форматируем карточки через сервис
+        cards_text = await sync_to_async(UserService.format_cards_for_display)(cards)
+        
+        await message.answer(cards_text, parse_mode="HTML")
+        
+    except Exception as e:
+        logger.exception("Ошибка в /cards")
+        await message.answer(Config.MESSAGES['not_registered'])
+
+@router.message(Command("link"))
+async def cmd_link(message: Message):
+    """Обработчик команды /link - информация о привязке аккаунта"""
+    telegram_id = message.from_user.id
+    user = await sync_to_async(get_user_by_telegram_id)(telegram_id)
+    
+    if user and not user.email.startswith("telegram_"):
+        # Аккаунт уже привязан
+        telegram_info = await sync_to_async(get_user_telegram_info)(user)
+        
+        link_text = f"✅ Ваш аккаунт привязан к Telegram!\n\n"
+        link_text += f"👤 Пользователь: {user.username}\n"
+        link_text += f"📧 Email: {user.email}\n"
+        link_text += f"🆔 Telegram ID: {telegram_info.get('telegram_id')}\n"
+        
+        if telegram_info.get('telegram_username'):
+            link_text += f"📱 Username: @{telegram_info['telegram_username']}\n"
+        
+        link_text += f"\n🔗 Открыть сайт: {Config.SITE_URL}"
+        
+        # Добавляем кнопку для генерации токена автовхода
+        keyboard = InlineKeyboardMarkup(
+            inline_keyboard=[
+                [InlineKeyboardButton(text="🌐 Открыть сайт", url=Config.SITE_URL)],
+                [InlineKeyboardButton(text="🔑 Сгенерировать ссылку для входа", callback_data="generate_auth_token")]
+            ]
+        )
+        
+        await message.answer(link_text, reply_markup=keyboard)
+    else:
+        # Аккаунт не привязан
+        link_text = "🔗 Для привязки аккаунта:\n\n"
+        link_text += "1️⃣ Зарегистрируйтесь на сайте\n"
+        link_text += "2️⃣ Перейдите в раздел 'Telegram'\n"
+        link_text += "3️⃣ Сгенерируйте ссылку для привязки\n"
+        link_text += "4️⃣ Перейдите по ссылке в боте\n\n"
+        link_text += f"🌐 Сайт: {Config.SITE_URL}"
+        
+        await message.answer(link_text)
+
+@router.callback_query(F.data == "generate_auth_token")
+async def handle_generate_auth_token(callback: CallbackQuery):
+	"""Обработчик генерации токена автовхода"""
+	try:
+		telegram_id = callback.from_user.id
+		user = await sync_to_async(get_user_by_telegram_id)(telegram_id)
+		
+		if not user or user.email.startswith("telegram_"):
+			await callback.answer("❌ Аккаунт не привязан к Telegram")
+			return
+		
+		# Генерируем токен автовхода через API сайта
+		data = _client.post_json(
+			f"{Config.SITE_URL}/users/api/v1/generate-auth-token/",
+			{'telegram_id': telegram_id}
+		)
+		
+		if data.get('success'):
+			auth_url = data.get('auth_url')
+			expires_at = data.get('expires_at')
+			
+			auth_text = f"🔑 Ссылка для автоматического входа:\n\n"
+			auth_text += f"⏰ Действительна до: {expires_at}\n\n"
+			auth_text += f"🔗 Перейдите по ссылке для входа на сайт без пароля"
+			
+			keyboard = InlineKeyboardMarkup(
+				inline_keyboard=[
+					[InlineKeyboardButton(text="🌐 Войти на сайт", url=auth_url)]
+				]
+			)
+			
+			await callback.message.edit_text(auth_text, reply_markup=keyboard)
+			await callback.answer("✅ Ссылка сгенерирована!")
+		else:
+			await callback.answer(f"❌ Ошибка: {data.get('error', 'Неизвестная ошибка')}")
+			
+	except Exception as e:
+		await callback.answer("❌ Ошибка соединения с сайтом")
 
 @router.message(Command("remind"))
 async def cmd_remind(message: Message):
@@ -116,15 +272,18 @@ async def cmd_remind(message: Message):
         # Импортируем сервис напоминаний
         from services.reminder_service import ReminderService
         
-        # Создаём экземпляр сервиса с ботом
-        from main import bot
+        # Получаем экземпляр бота из контекста сообщения
+        bot = message.bot
+        
         reminder_service = ReminderService(bot)
         
         # Отправляем тестовое напоминание
         await reminder_service.send_manual_reminder(message.from_user.id)
         
+        await message.answer("✅ Тестовое напоминание отправлено!")
+        
     except Exception as e:
-        await message.answer(f"❌ Ошибка при отправке напоминания: {str(e)}")
+        await message.answer(f"❌ Ошибка: {str(e)}")
 
 @router.callback_query(F.data.startswith("cards_page:"))
 async def callback_cards_page(callback: CallbackQuery):
@@ -178,43 +337,7 @@ async def handle_cards_button(message: Message):
 async def handle_help_button(message: Message):
     await cmd_help(message)
 
-@router.message(Command("link"))
-async def link_account(message: Message):
-    """Связывает Telegram аккаунт с существующим пользователем Django"""
-    telegram_id = message.from_user.id
-    telegram_username = message.from_user.username
-    
-    # Проверяем, не связан ли уже аккаунт
-    try:
-        user = await sync_to_async(get_user_by_telegram_id)(telegram_id)
-        telegram_info = await sync_to_async(get_user_telegram_info)(user)
-        
-        if telegram_info['is_telegram_user']:
-            await message.answer(
-                "✅ Ваш аккаунт уже связан с системой LinguaTrack!\n\n"
-                "Используйте команды:\n"
-                "/today - слова на повторение\n"
-                "/test - пройти тест\n"
-                "/progress - статистика\n"
-                "/cards - ваши карточки"
-            )
-            return
-    except:
-        pass
-    
-    # Отправляем инструкции по связыванию
-    await message.answer(
-        "🔗 Связывание аккаунта с LinguaTrack\n\n"
-        "Для связывания вашего Telegram с существующим аккаунтом на сайте:\n\n"
-        "1️⃣ Зарегистрируйтесь на сайте: http://127.0.0.1:8000/register/\n"
-        "2️⃣ При регистрации укажите:\n"
-        f"   • Telegram ID: <code>{telegram_id}</code>\n"
-        f"   • Telegram Username: <code>{telegram_username or 'не указан'}</code>\n\n"
-        "3️⃣ Или отправьте мне сообщение в формате:\n"
-        "<code>/link_username ваш_username_с_сайта</code>\n\n"
-        "После связывания вы сможете использовать одни и те же карточки на сайте и в боте!",
-        parse_mode="HTML"
-    )
+# Удалён дублирующийся обработчик команды /link (link_account)
 
 @router.message(lambda message: message.text and message.text.startswith("/link_username "))
 async def link_username(message: Message):

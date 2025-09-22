@@ -2,7 +2,7 @@
 Сервис для работы с тестами
 """
 
-import asyncio
+import time
 import random
 from typing import List, Dict, Any
 from utils.django_utils import get_user_by_telegram_id, get_random_cards_for_test, save_test_result
@@ -33,7 +33,7 @@ class TestService:
             'correct_answers': 0,
             'wrong_answers': 0,
             'answers': [],
-            'start_time': asyncio.get_event_loop().time()
+            'start_time': time.time()
         }
         
         cls.active_tests[telegram_id] = test_data

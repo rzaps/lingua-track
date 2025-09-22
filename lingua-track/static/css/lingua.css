@@ -269,24 +269,24 @@ input:focus, select:focus, textarea:focus {
 } 
 
 .dark .btn-success {
-  background: var(--accent-color) !important;
-  color: #fff !important;
-  border: none;
+  background: transparent !important;
+  color: var(--accent-color) !important;
+  border: none !important;
 }
 .dark .btn-primary {
-  background: var(--accent-secondary) !important;
-  color: #fff !important;
-  border: none;
+  background: transparent !important;
+  color: var(--accent-secondary) !important;
+  border: none !important;
 }
 .dark .btn-warning {
-  background: #FFC107 !important;
-  color: #fff !important;
-  border: none;
+  background: transparent !important;
+  color: #FFC107 !important;
+  border: none !important;
 }
 .dark .btn-danger {
-  background: #F44336 !important;
-  color: #fff !important;
-  border: none;
+  background: transparent !important;
+  color: #F44336 !important;
+  border: none !important;
 }
 .dark .btn-outline-primary {
   background: none !important;
@@ -345,10 +345,18 @@ input:focus, select:focus, textarea:focus {
   transition: background 0.2s, color 0.2s;
   box-shadow: none !important;
 }
+.btn-icon.btn-success { color: var(--accent-color) !important; }
+.btn-icon.btn-success .bi { color: var(--accent-color) !important; }
+.btn-icon.btn-secondary { background: none !important; }
+.dark .btn-icon { background: none !important; }
+
+/* hover highlight */
 .btn-icon:hover, .btn-icon:focus {
   background: var(--border-color) !important;
   color: var(--accent-secondary) !important;
   border-radius: 50% !important;
+  box-shadow: none !important;
+  outline: none !important;
 }
 .btn-icon.btn-info { color: var(--accent-secondary) !important; }
 .btn-icon.btn-warning { color: #FFC107 !important; }

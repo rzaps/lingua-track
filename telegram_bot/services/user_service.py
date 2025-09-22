@@ -2,7 +2,7 @@
 Сервис для работы с пользователями
 """
 
-from utils.django_utils import get_user_by_telegram_id, get_today_cards, get_user_progress, get_user_cards
+from utils.django_utils import get_user_by_telegram_id, get_today_cards, get_user_progress, get_user_cards_paginated
 
 class UserService:
     """Сервис для работы с пользователями"""
@@ -25,10 +25,11 @@ class UserService:
         return get_user_progress(user)
     
     @staticmethod
-    def get_user_cards_paginated(telegram_id: int, page: int = 1, per_page: int = 10):
-        """Получает карточки пользователя с пагинацией"""
+    def get_user_cards(telegram_id: int):
+        """Получает карточки пользователя"""
         user = get_user_by_telegram_id(telegram_id)
-        return get_user_cards(user, page, per_page)
+        cards_data = get_user_cards_paginated(user, 1, 50)  # Получаем первые 50 карточек
+        return cards_data['cards']  # Возвращаем только список карточек
     
     @staticmethod
     def format_cards_for_display(cards: list) -> str:
