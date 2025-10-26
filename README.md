@@ -96,21 +96,21 @@ SECRET_KEY=ваш-секретный-ключ-сюда
 ALLOWED_HOSTS=127.0.0.1,localhost
 DEBUG=True
 
-## Настройки Telegram бота
+#### Настройки Telegram бота
 BOT_TOKEN=your-telegram-bot-token
 BOT_USERNAME=your_bot_username
 SITE_URL=http://127.0.0.1:8000
 
-## Настройки напоминаний (UTC)
+#### Настройки напоминаний (UTC)
 REMINDER_HOUR=9
 REMINDER_MINUTE=0
 
 ### 5. Настройка базы данных
 
-## Применение миграций
+#### Применение миграций
 python manage.py migrate
 
-## Создание суперпользователя (опционально)
+#### Создание суперпользователя (опционально)
 python manage.py createsuperuser
 
 ### 6. Запуск веб-приложения
