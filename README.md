@@ -63,7 +63,67 @@ lingua-track/
 - `/feedback` - оставить отзыв
 
 
+## Установка и запуск
+
+### Предварительные требования
+- Python 3.10 или выше
+- pip (менеджер пакетов Python)
+- Git
+
+### 1. Клонирование репозитория
+
+git clone <URL-вашего-репозитория>
+cd lingua-track
+
+### 2. Создание виртуального окружения
+
+# Для Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Для Linux/MacOS
+python3 -m venv venv
+source venv/bin/activate
+
+### 3. Установка зависимостей
+
+pip install -r requirements.txt
+
+### 4. Настройка окружения
+Создайте файл .env в корневой директории проекта и добавьте необходимые переменные:
+
+SECRET_KEY=ваш-секретный-ключ-сюда
+ALLOWED_HOSTS=127.0.0.1,localhost
+DEBUG=True
+
+# Настройки Telegram бота
+BOT_TOKEN=your-telegram-bot-token
+BOT_USERNAME=your_bot_username
+SITE_URL=http://127.0.0.1:8000
+
+# Настройки напоминаний (UTC)
+REMINDER_HOUR=9
+REMINDER_MINUTE=0
+
+### 5. Настройка базы данных
+
+# Применение миграций
+python manage.py migrate
+
+# Создание суперпользователя (опционально)
+python manage.py createsuperuser
+
+### 6. Запуск веб-приложения
+python manage.py runserver
+Приложение будет доступно по адресу: http://localhost:8000
+
+### 7. Настройка и запуск Telegram бота
+Для работы бота необходимо:
+Получить токен бота у @BotFather
+Указать токен в файле .env как BOT_TOKEN
+Запустить бота (в отдельном терминале):
+
+python telegram_bot/main.py
 
 ## Лицензия
-
 Проприетарная лицензия - см. файл LICENSE 
