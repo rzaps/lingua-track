@@ -47,11 +47,18 @@ def multiple_choice_test(request):
     if len(user_cards) < 2:
         return render(request, 'quiz/need_more_cards.html')
 
-    # Получаем направление из сессии (должно быть выбрано на главной странице)
-    direction = request.session.get('quiz_direction')
+    # Получаем направление из GET-параметров или сессии
+    direction = request.GET.get('direction') or request.session.get('quiz_direction')
     if not direction:
         # Если направление не выбрано, возвращаемся к выбору
         return redirect('quiz:choose_test')
+    
+    # Сохраняем направление и тип теста в сессию (если пришли из GET-параметров)
+    if request.GET.get('direction'):
+        request.session['quiz_direction'] = direction
+        request.session['quiz_test_type'] = 'multiple_choice'
+        request.session['quiz_question_idx'] = 0
+        request.session['quiz_score'] = 0
 
     # Индекс текущего вопроса (номер карточки в тесте), хранится в сессии
     question_idx = request.session.get('quiz_question_idx', 0)
@@ -134,11 +141,18 @@ def typing_test(request):
     if len(user_cards) < 1:
         return render(request, 'quiz/need_more_cards.html')
 
-    # Получаем направление из сессии (должно быть выбрано на главной странице)
-    direction = request.session.get('quiz_direction')
+    # Получаем направление из GET-параметров или сессии
+    direction = request.GET.get('direction') or request.session.get('quiz_direction')
     if not direction:
         # Если направление не выбрано, возвращаемся к выбору
         return redirect('quiz:choose_test')
+    
+    # Сохраняем направление и тип теста в сессию (если пришли из GET-параметров)
+    if request.GET.get('direction'):
+        request.session['quiz_direction'] = direction
+        request.session['quiz_test_type'] = 'typing'
+        request.session['quiz_question_idx'] = 0
+        request.session['quiz_score'] = 0
 
     # Индекс текущего вопроса (номер карточки в тесте), хранится в сессии
     question_idx = request.session.get('quiz_question_idx', 0)
@@ -214,11 +228,18 @@ def matching_test(request):
     if len(user_cards) < 2:
         return render(request, 'quiz/need_more_cards.html')
 
-    # Получаем направление из сессии (должно быть выбрано на главной странице)
-    direction = request.session.get('quiz_direction')
+    # Получаем направление из GET-параметров или сессии
+    direction = request.GET.get('direction') or request.session.get('quiz_direction')
     if not direction:
         # Если направление не выбрано, возвращаемся к выбору
         return redirect('quiz:choose_test')
+    
+    # Сохраняем направление и тип теста в сессию (если пришли из GET-параметров)
+    if request.GET.get('direction'):
+        request.session['quiz_direction'] = direction
+        request.session['quiz_test_type'] = 'matching'
+        request.session['quiz_question_idx'] = 0
+        request.session['quiz_score'] = 0
 
     # Индекс текущего вопроса (номер карточки в тесте), хранится в сессии
     question_idx = request.session.get('quiz_question_idx', 0)
